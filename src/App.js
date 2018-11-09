@@ -1,26 +1,54 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { Component, lazy } from "react";
+
+import { BrowserRouter, Route } from "react-router-dom";
+
+import "./App.css";
+
+import PrivateRoute from "./Components/PrivateRoute";
+import Login from "./Components/Login";
+import UserService from "./services/UserService";
+import Loading from "./Components/Loading";
+import { AuthContext } from "./context/AuthProvider";
+
+const Admin = lazy(() => import("./Components/Admin"));
 
 class App extends Component {
+  static contextType = AuthContext;
+  state = { loading: false };
+
+  toggleLoading = () => this.setState(({ loading }) => ({ loading: !loading }));
+
+  async componentDidMount() {
+    try {
+      this.toggleLoading();
+      const res = await UserService.validateToken();
+      this.context.setUser(res.data.data);
+      this.toggleLoading();
+      this.context.toggleAuthenticated();
+    } catch (error) {
+      console.error(error);
+      if (error.response) {
+        this.toggleLoading();
+      } else {
+        this.toggleLoading();
+      }
+    }
+  }
+
   render() {
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
+      <BrowserRouter>
+        <React.Fragment>
+          {this.state.loading ? (
+            <Loading />
+          ) : (
+            <React.Fragment>
+              <Route exact path="" component={Login} />
+              <PrivateRoute path="/a" component={Admin} />
+            </React.Fragment>
+          )}
+        </React.Fragment>
+      </BrowserRouter>
     );
   }
 }
