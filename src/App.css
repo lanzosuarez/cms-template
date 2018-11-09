@@ -158,7 +158,6 @@
   font-size: 13px;
   border: 0;
   background: #e2e2ee;
-
 }
 
 .ant-input.chat-input::placeholder {
@@ -188,7 +187,7 @@
   border-bottom-right-radius: 0;
   font-size: 12px;
   word-break: break-word;
-  text-align: left
+  text-align: left;
 }
 
 .client-message-con {
@@ -204,10 +203,15 @@
   border-bottom-left-radius: 0;
   font-size: 12px;
   word-break: break-word;
-  text-align: left
+  text-align: left;
 }
 
 .msg-con {
   width: 40%;
   font-size: 11px;
+}
+
+.chat-input-con {
+  display: flex;
+  align-items: center;
 }

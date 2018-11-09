@@ -1,12 +1,12 @@
-import React, { Fragment } from "react";
+import React, { Fragment, forwardRef } from "react";
 import AgentMessage from "./AgentMessage";
 import ClientMessage from "./ClientMessage";
 
 // import { Button, Icon } from "antd";
 
-export default ({ queue }) => {
+export default forwardRef(({ queue }, ref) => {
   return (
-    <div>
+    <div ref={ref}>
       {queue ? (
         <Fragment>
           <ClientMessage
@@ -42,4 +42,4 @@ export default ({ queue }) => {
       ) : null}
     </div>
   );
-};
+});

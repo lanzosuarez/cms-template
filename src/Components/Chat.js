@@ -1,5 +1,5 @@
-import React, { Component, Fragment } from "react";
-import { Row, Col, message, Input } from "antd";
+import React, { Component, Fragment, createRef } from "react";
+import { Row, Col, message, Input, Icon } from "antd";
 import { QueuesConsumer } from "../context/QueuesProvider";
 import { ComponentConnect } from "../context/contextHelper";
 import QueueService from "../services/QueueService";
@@ -9,6 +9,8 @@ import ChatBox from "./ChatBox";
 
 class Chat extends Component {
   state = { queue: null, loading: false };
+
+  chatboxRef = createRef();
 
   cancelGetQueue = () => {};
 
@@ -26,6 +28,10 @@ class Chat extends Component {
     }
   }
 
+  scrollToBottom = () => {
+    this.chatboxRef.current.scrollTop = this.chatboxRef.current.scrollHeight;
+  };
+
   getQueue = async () => {
     try {
       this.toggleLoading();
@@ -34,6 +40,7 @@ class Chat extends Component {
         cancel => (this.cancelGetQueue = cancel)
       );
       this.setState({ queue: res.data.data });
+      this.scrollToBottom();
       console.log(res);
       this.toggleLoading();
     } catch (error) {
@@ -74,12 +81,22 @@ class Chat extends Component {
               lg={24}
               md={24}
             >
-              <ChatBox queue={queue} />
+              <ChatBox ref={this.chatboxRef} queue={queue} />
             </Col>
             <Col style={{ padding: queue ? 20 : 0 }} xl={24} lg={24} md={24}>
-              {queue && <Input.TextArea 
-                className="chat-input"
-                placeholder="Say something..." />}
+              {queue && (
+                <div className="chat-input-con">
+                  <Icon
+                    theme="twoTone"
+                    style={{ fontSize: 30, marginRight: 12, cursor: "pointer" }}
+                    type="picture"
+                  />
+                  <Input.TextArea
+                    className="chat-input"
+                    placeholder="Say something..."
+                  />
+                </div>
+              )}
             </Col>
           </Fragment>
         )}
