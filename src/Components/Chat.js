@@ -1,36 +1,98 @@
-import React, { Component, Fragment, createRef } from "react";
-import { Row, Col, message, Input, Icon } from "antd";
+import React, { Component, Fragment } from "react";
+import { Row, Col, message, Upload } from "antd";
 import { QueuesConsumer } from "../context/QueuesProvider";
 import { ComponentConnect } from "../context/contextHelper";
 import QueueService from "../services/QueueService";
+import MessageService from "../services/MessageService";
 import Loading from "./Loading";
 import ChatHeader from "./ChatHeader";
 import ChatBox from "./ChatBox";
+import ChatInput from "./ChatInput";
+import { AuthConsumer } from "../context/AuthProvider";
+import * as randomstring from "randomstring";
+import SocketService from "../services/SocketService";
+import { CLIENT_MESSAGE } from "../globals";
 
 class Chat extends Component {
-  state = { queue: null, loading: false };
-
-  chatboxRef = createRef();
+  state = {
+    queue: null,
+    loading: false,
+    messageText: "",
+    messages: [],
+    files: [],
+    totalMessageCount: 0,
+    messageLoading: false,
+    fetchMore: false,
+    more: false,
+    page: 1
+  };
 
   cancelGetQueue = () => {};
+  cancelGetMessages = () => {};
+  cancelGetMessagesCount = () => {};
+  cancelGetMoreMessages = () => {};
+  cancelReadMessages = () => {};
 
   componentWillUnmount() {
     this.cancelGetQueue();
+    this.cancelGetMessages();
+    this.cancelGetMessages();
+    this.cancelGetMoreMessages();
+    this.cancelReadMessages();
   }
 
   toggleLoading = () => this.setState(({ loading }) => ({ loading: !loading }));
 
-  componentDidUpdate(prevProps) {
-    if (prevProps.selectedQueue !== this.props.selectedQueue) {
-      console.log("NEW QUEUR");
-      this.cancelGetQueue();
+  toggleMessageLoading = () =>
+    this.setState(({ messageLoading }) => ({
+      messageLoading: !messageLoading
+    }));
+  toggleFetchMore = () =>
+    this.setState(({ fetchMore }) => ({ fetchMore: !fetchMore }));
+
+  componentDidMount() {
+    if (this.props.selectedQueue) {
       this.getQueue();
     }
   }
 
-  scrollToBottom = () => {
-    this.chatboxRef.current.scrollTop = this.chatboxRef.current.scrollHeight;
+  componentDidUpdate(prevProps) {
+    if (prevProps.selectedQueue !== this.props.selectedQueue) {
+      this.cancelGetQueue();
+      this.getQueue();
+      this.getMessageResources();
+      this.listenFormClientMessage();
+      this.readAllMessages();
+      this.props.setReadQueue(this.props.selectedQueue);
+      this.readAllMessages();
+    }
+  }
+
+  readAllMessages = () => {
+    MessageService.readMessages(
+      { queue: this.props.selectedQueue },
+      token => (this.cancelReadMessages = token)
+    );
   };
+
+  listenFormClientMessage = () => {
+    SocketService.listenToEvent(CLIENT_MESSAGE, payload => {
+      const { selectedQueue } = this.props;
+      if (selectedQueue === payload.message.queue) {
+        this.setState(({ messages }) => ({
+          messages: [payload.message, ...messages]
+        }));
+        this.readAllMessages();
+      }
+    });
+  };
+
+  gotoHome = () => {
+    message.warn("Your session has expired. Logging you out");
+    window.setTimeout(() => (window.location.pathname = ""), 2000);
+  };
+
+  setMessagesState = (key, value) => this.setState({ [key]: value });
 
   getQueue = async () => {
     try {
@@ -40,20 +102,208 @@ class Chat extends Component {
         cancel => (this.cancelGetQueue = cancel)
       );
       this.setState({ queue: res.data.data });
-      this.scrollToBottom();
-      console.log(res);
       this.toggleLoading();
     } catch (error) {
       const { response } = error;
       if (response) {
         this.toggleLoading();
+        if (response.status === 401) {
+          this.gotoHome();
+          return;
+        }
         message.error(response.errorMessage);
       }
     }
   };
 
+  getMessageResources = async () => {
+    try {
+      this.toggleMessageLoading();
+      const res = await Promise.all([
+        this.getMessages(),
+        this.getMessagesCount()
+      ]);
+      this.toggleMessageLoading();
+      console.log(res);
+      const [m, mcount] = res;
+      const messages = m.data.data;
+      const totalMessageCount = mcount.data.data;
+      this.setMessagesState("messages", messages);
+      this.setMessagesState("totalMessageCount", totalMessageCount);
+    } catch (error) {
+      const { response } = error;
+      if (response) {
+        this.toggleLoading();
+        if (response.status === 401) {
+          this.gotoHome();
+          return;
+        }
+        message.error(response.errorMessage);
+      }
+    }
+  };
+
+  getMessages = () => {
+    const { selectedQueue } = this.props;
+
+    const { page } = this.state;
+    return MessageService.getMessages(
+      { qId: selectedQueue, page },
+      cancelToken => (this.cancelGetQueues = cancelToken)
+    );
+  };
+
+  getMessagesCount = () => {
+    const { selectedQueue } = this.props;
+    return MessageService.getQueuesCount(
+      { qId: selectedQueue },
+      cancelToken => (this.cancelGetQueuesCount = cancelToken)
+    );
+  };
+
+  getMoreMessages = async () => {
+    try {
+      const { page, messages } = this.state;
+      const { selectedQueue } = this.props;
+      this.toggleFetchMore();
+      const res = await MessageService.getMessages(
+        {
+          qId: selectedQueue,
+          page: page + 1 //increment page
+        },
+        cancelToken => (this.cancelGetMoreMessages = cancelToken)
+      );
+      this.toggleFetchMore();
+      const fetchedMessages = res.data.data;
+      //add new messages to prev messages
+
+      this.setState({
+        more: true,
+        page: page + 1,
+        messages: [...messages, ...fetchedMessages]
+      });
+    } catch (error) {
+      const { response } = error;
+      if (response) {
+        this.toggleFetchMore();
+        if (response.status === 401) {
+          this.gotoHome();
+          return;
+        }
+        message.error(response.errorMessage);
+      }
+    }
+  };
+
+  listenForScrollToTop = e => {
+    const { scrollTop } = e.target;
+    const { messages, totalMessageCount } = this.state;
+    if (
+      scrollTop === 0 && //reacth the top most aprt
+      !this.state.fetchMore && //check if fetching more messages
+      messages.length !== totalMessageCount //check if all messages are fetched
+    ) {
+      this.getMoreMessages();
+    }
+  };
+
+  handleChangeMessage = messageText => this.setState({ messageText });
+
+  sendMessage = async () => {
+    const { user } = this.props;
+    const {
+      messageText,
+      queue,
+      messages,
+      totalMessageCount,
+      files
+    } = this.state;
+    if (messageText.length > 0 && files.length > 0) {
+      //if text and image
+      const attachments = files.map(f => f.url);
+      const newMessage = {
+        fromCms: true,
+        newMsg: true,
+        _id: randomstring.generate(10),
+        agent: { _id: user._id, name: user.username },
+        queue: queue._id,
+        message: { text: messageText.replace("\n", ""), attachments },
+        read: true,
+        type: 1,
+        timestamp: new Date()
+      };
+      this.setState({
+        messageText: "",
+        files: [],
+        messages: [newMessage, ...messages],
+        totalMessageCount: totalMessageCount + 1
+      });
+    } else if (messageText.length > 0) {
+      //text only
+      const newMessage = {
+        newMsg: true,
+        fromCms: true,
+        _id: randomstring.generate(10),
+        agent: { _id: user._id, name: user.username },
+        queue: queue._id,
+        message: { text: messageText.replace("\n", "") },
+        read: true,
+        type: 1,
+        timestamp: new Date()
+      };
+      this.setState({
+        messageText: "",
+        messages: [newMessage, ...messages],
+        totalMessageCount: totalMessageCount + 1
+      });
+    } else if (files.length > 0) {
+      //image only
+      const attachments = files.map(f => f.url);
+      const newMessage = {
+        fromCms: true,
+        newMsg: true,
+        _id: randomstring.generate(10),
+        agent: { _id: user._id, name: user.username },
+        queue: queue._id,
+        message: { attachments },
+        read: true,
+        type: 1,
+        timestamp: new Date()
+      };
+      this.setState({
+        messageText: "",
+        files: [],
+        messages: [newMessage, ...messages],
+        totalMessageCount: totalMessageCount + 1
+      });
+    }
+  };
+
+  setFiles = newfiles => {
+    const { files } = this.state;
+    this.setState({ files: [...files, ...newfiles] });
+  };
+
+  onRemoveFile = ({ uid }) => {
+    const { files } = this.state;
+    const fIndex = files.findIndex(f => f.uid === uid);
+    if (fIndex > -1) {
+      files.splice(fIndex, 1);
+      this.setState({ files });
+    }
+  };
+
   render() {
-    const { queue, loading } = this.state;
+    const {
+      queue,
+      loading,
+      messageText,
+      messages,
+      messageLoading,
+      fetchMore,
+      files,
+      more
+    } = this.state;
     return (
       <Row
         className={queue ? "chat-con h100" : ""}
@@ -62,7 +312,7 @@ class Chat extends Component {
         align="middle"
       >
         {loading ? (
-          <Loading tip="Fetching conversation" />
+          <Loading tip="Fetching queue details" />
         ) : (
           <Fragment>
             <Col
@@ -71,32 +321,62 @@ class Chat extends Component {
               xl={24}
               lg={24}
               md={24}
+              sm={24}
+              xs={24}
             >
               <ChatHeader queue={queue} />
             </Col>
             <Col
+              onScroll={this.listenForScrollToTop}
               className="chat-box-con"
               style={{ padding: queue ? 20 : 0 }}
               xl={24}
               lg={24}
               md={24}
+              sm={24}
+              xs={24}
             >
-              <ChatBox ref={this.chatboxRef} queue={queue} />
+              <ChatBox
+                more={more}
+                setFiles={this.setFiles}
+                fetchMore={fetchMore}
+                messageLoading={messageLoading}
+                messages={messages}
+                setMessagesState={this.setMessagesState}
+                queue={queue}
+              />
             </Col>
-            <Col style={{ padding: queue ? 20 : 0 }} xl={24} lg={24} md={24}>
-              {queue && (
-                <div className="chat-input-con">
-                  <Icon
-                    theme="twoTone"
-                    style={{ fontSize: 30, marginRight: 12, cursor: "pointer" }}
-                    type="picture"
-                  />
-                  <Input.TextArea
-                    className="chat-input"
-                    placeholder="Say something..."
-                  />
-                </div>
-              )}
+            <Col xl={24} lg={24} md={24} sm={24} xs={24}>
+              <div className="upload">
+                <Upload
+                  showUploadList={{
+                    showPreviewIcon: false,
+                    showRemoveIcon: true
+                  }}
+                  onRemove={this.onRemoveFile}
+                  fileList={files}
+                  multiple
+                  beforeUpload={() => false}
+                  accept="image/*"
+                  listType="picture-card"
+                />
+              </div>
+            </Col>
+            <Col
+              style={{ padding: queue ? 20 : 0 }}
+              xl={24}
+              lg={24}
+              md={24}
+              sm={24}
+              xs={24}
+            >
+              <ChatInput
+                setFiles={this.setFiles}
+                sendMessage={this.sendMessage}
+                messageText={messageText}
+                handleChangeMessage={this.handleChangeMessage}
+                queue={queue}
+              />
             </Col>
           </Fragment>
         )}
@@ -105,4 +385,9 @@ class Chat extends Component {
   }
 }
 
-export default ComponentConnect(["selectedQueue"], QueuesConsumer)(Chat);
+export default ComponentConnect(["user"], AuthConsumer)(
+  ComponentConnect(
+    ["selectedQueue", "queues", "setQueues", "setReadQueue"],
+    QueuesConsumer
+  )(Chat)
+);

@@ -6,7 +6,6 @@ class SocketService {
 
   static initSocket() {
     const URL = API_URL.replace("/api/v1", "");
-
     this.socket = io(URL, {
       transports: ["websocket"]
     });

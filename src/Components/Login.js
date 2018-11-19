@@ -14,8 +14,15 @@ export class Login extends Component {
     loading: false,
     err: false,
     errMsg: "",
-    success: false
+    success: false,
+    redirectToReferrer: false
   };
+
+  componentDidMount() {
+    if (!this.context.isAuthenticated) {
+      this.setState({ redirectToReferrer: true });
+    }
+  }
 
   toggleLoading = () => this.setState(({ loading }) => ({ loading: !loading }));
 
@@ -53,17 +60,16 @@ export class Login extends Component {
 
   storeToken = token => localStorage.setItem("token", token);
 
-  toToAdminIn1sec = () => {
-    this.props.location.push("/a");
-  };
+  toToAdminIn1sec = () => this.props.location.push("/a");
 
   render() {
+    const { from } = this.props.location.state || { from: { pathname: "/a" } };
     const { err, errMsg, success } = this.state;
     const { getFieldDecorator } = this.props.form;
-
+    
     return !this.context.isAuthenticated ? (
       <Row className="w100 h100" type="flex" justify="center" align="middle">
-        <Col className="login-form-con" xs={12} xss={20} sm={9} lg={6}>
+        <Col className="login-form-con" xs={18} xss={20} sm={9} lg={6}>
           <h2 className="tcenter">LOG IN</h2>
           <p className="tcenter">Login to access admin panel</p>
           {err && (
@@ -118,7 +124,7 @@ export class Login extends Component {
         </Col>
       </Row>
     ) : (
-      <Redirect to="/a" />
+      <Redirect to={from} />
     );
   }
 }

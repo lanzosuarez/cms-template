@@ -20,9 +20,9 @@ export default class QueueService {
     });
   }
 
-  static getQueue(id, cancel) {
+  static getQueue(id, cancel, fields = "") {
     return axios.get(`${API_URL}/queue`, {
-      params: { by: "id", value: id },
+      params: { by: "id", value: id, fields },
       headers: { "authorization-token": token },
       cancelToken: new CancelToken(cancel)
     });

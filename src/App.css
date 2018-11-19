@@ -69,8 +69,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  height: 100px;
+  padding: 30px 20px 20px;
+  /* height: 100px; */
 }
 
 .ant-list.qs {
@@ -86,6 +86,7 @@
 
 .loading-container {
   width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -105,7 +106,7 @@
 }
 
 .msg-timestamp {
-  font-size: 10px;
+  /* font-size: 10px; */
 }
 
 .chat-con {
@@ -120,8 +121,9 @@
   align-items: center;
 }
 
-.chat-title {
+.chat-title > * {
   flex: 3;
+  color: white !important;
 }
 
 .chat-actions {
@@ -188,6 +190,7 @@
   font-size: 12px;
   word-break: break-word;
   text-align: left;
+  /* box-shadow: 0px 0px 9px var(--shadow); */
 }
 
 .client-message-con {
@@ -204,6 +207,7 @@
   font-size: 12px;
   word-break: break-word;
   text-align: left;
+  /* box-shadow: 0px 0px 9px var(--shadow); */
 }
 
 .msg-con {
@@ -214,4 +218,98 @@
 .chat-input-con {
   display: flex;
   align-items: center;
+}
+
+.ant-layout.ant-layout-has-sider > .ant-layout,
+.ant-layout.ant-layout-has-sider > .ant-layout-content {
+  overflow: visible !important;
+}
+
+.cbox {
+  overflow: auto;
+}
+
+.msg-icon {
+  margin-right: 5px;
+}
+
+.upload {
+  padding: 10px 20px 0px !important;
+}
+
+.agent-attachment {
+  display: grid;
+  position: relative;
+  grid-row-gap: 10px;
+  background: #e2e2ed;
+  border-radius: 10px;
+  padding: 15px;
+  border-bottom-right-radius: 0;
+  margin-bottom: 1em;
+}
+
+img.msg-img {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.load-msg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-con {
+  padding: 20px;
+  background: #002798;
+  color: white;
+  box-shadow: 0px 0px 10px var(--shadow);
+  border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+}
+
+/*agents*/
+
+.agents-col {
+  box-shadow: 0px 0px 9px var(--shadow);
+  border-radius: 5px;
+  padding-left: 10px;
+}
+
+.agents-con {
+  padding: 20px;
+}
+
+.ant-pagination {
+  margin-right: 15px !important;
+}
+
+.ant-table-title {
+  border: 0 !important;
+}
+
+.custom-filter-dropdown {
+  padding: 8px;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+  display: grid;
+  grid-gap: 10px;
+  grid-template-columns: 1fr 80px;
+}
+
+.custom-select-dropdown {
+  padding: 8px;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+}
+
+.highlight {
+  color: #f50;
 }

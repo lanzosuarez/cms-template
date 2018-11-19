@@ -3,11 +3,10 @@ import { Route, Redirect } from "react-router-dom";
 import { AuthConsumer } from "../context/AuthProvider";
 import Loading from "./Loading";
 
-
 const PrivateRoute = ({ component: Component, ...rest }) => (
   <Route
     {...rest}
-    render={() => (
+    render={props => (
       <AuthConsumer>
         {({ isAuthenticated }) =>
           isAuthenticated === true ? (
@@ -15,7 +14,12 @@ const PrivateRoute = ({ component: Component, ...rest }) => (
               <Component />
             </Suspense>
           ) : (
-            <Redirect to="" />
+            <Redirect
+              to={{
+                pathname: "/",
+                state: { from: props.location }
+              }}
+            />
           )
         }
       </AuthConsumer>

@@ -6,8 +6,6 @@ import QueueService from "../services/QueueService";
 import { ComponentConnect } from "../context/contextHelper";
 import { AuthConsumer } from "../context/AuthProvider";
 import { QueuesConsumer } from "../context/QueuesProvider";
-import SocketService from "../services/SocketService";
-import { NEW_QUEUE } from "../globals";
 import Chat from "./Chat";
 
 class Conversations extends Component {
@@ -39,36 +37,41 @@ class Conversations extends Component {
   async componentDidMount() {
     try {
       const { totalCount: tc, queues: qs } = this.props;
+      //skip get if theres a cache version
       if (tc && qs) {
         return;
       }
       this.toggleLoading();
       const res = await Promise.all([this.getQueues(), this.getQueuesCount()]);
-      console.log(res);
+      this.toggleLoading();
+
       const [q, qcount] = res;
       const queues = q.data.data;
       const totalCount = qcount.data.data;
-      console.log(totalCount);
 
       //cache initital fetch
       this.props.setQueues(queues);
       this.props.setTotalCount(totalCount);
-      this.toggleLoading();
     } catch (error) {
       const { response } = error;
       if (response) {
         this.toggleLoading();
+        if (response.status === 401) {
+          this.gotoHome();
+          return;
+        }
         message.error(response.errorMessage);
       }
     }
   }
 
-  listenForNewQueues = () => {
-    SocketService.listenToEvent(NEW_QUEUE, payload => {
-      const { setTotalCount, setQueues, totalCount, queues } = this.props;
-      setTotalCount(totalCount + 1);
-      setQueues([payload, ...queues]);
-    });
+  gotoHome = () => {
+    message.warn("Your session has expired. Logging you out");
+    window.setTimeout(() => (window.location.pathname = ""), 2000);
+  };
+
+  socketEventListeners = () => {
+    this.listenForNewQueues();
   };
 
   getQueues = () => {
@@ -91,6 +94,10 @@ class Conversations extends Component {
       const { response } = error;
       if (response) {
         this.toggleLoading();
+        if (response.status === 401) {
+          this.gotoHome();
+          return;
+        }
         message.error(response.errorMessage);
       }
     }
@@ -123,11 +130,16 @@ class Conversations extends Component {
       const fetchedQueues = res.data.data;
 
       //add new queues to prev queues
+      this.setState({ page: page + 1 });
       this.props.setQueues([...queues, ...fetchedQueues]);
     } catch (error) {
       const { response } = error;
       if (response) {
         this.toggleFetchMore();
+        if (response.status === 401) {
+          this.gotoHome();
+          return;
+        }
         message.error(response.errorMessage);
       }
     }
@@ -142,7 +154,6 @@ class Conversations extends Component {
       !this.state.fetchMore && //check if fetching more queues
       queues.length !== totalCount //check if all queues are fetched
     ) {
-      console.log("get more");
       this.getMoreQueues();
     }
   };
@@ -155,7 +166,7 @@ class Conversations extends Component {
     const { fetchMore, loading } = this.state;
     return (
       <Row className="conv-con h100" type="flex" justify="space-around">
-        <Col className="bgw qlist" xl={7} lg={7} md={7}>
+        <Col className="bgw qlist" xl={7} lg={7} md={7} sm={7} xs={7}>
           <SearchQueues
             loading={loading}
             fetchMore={fetchMore}
@@ -168,7 +179,7 @@ class Conversations extends Component {
             scrollListener={this.scrollListener}
           />
         </Col>
-        <Col xl={16} lg={16} md={16}>
+        <Col xl={16} lg={16} md={16} sm={16} xs={16}>
           <Chat />
         </Col>
       </Row>
@@ -178,7 +189,14 @@ class Conversations extends Component {
 
 export default ComponentConnect(["user"], AuthConsumer)(
   ComponentConnect(
-    ["queues", "totalCount", "setQueues", "setTotalCount", "selectedQueue", "setSelectedQueue"],
+    [
+      "queues",
+      "totalCount",
+      "setQueues",
+      "setTotalCount",
+      "selectedQueue",
+      "setSelectedQueue"
+    ],
     QueuesConsumer
   )(Conversations)
 );

@@ -15,12 +15,12 @@ export default ({ queue }) => {
             <p> {format(timestamp,"MMMM DD, YYYY HH:mm A")}</p>
           </div>
           <Button.Group size="default">
-            <Button ghost type="primary">
+            <Button ghost>
               Mute
               <Icon type="disconnect" />
             </Button>
-            <Button ghost type="danger">
-              Delete
+            <Button ghost>
+              Archive
               <Icon type="delete" />
             </Button>
           </Button.Group>

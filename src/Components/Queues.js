@@ -1,57 +1,38 @@
 import React from "react";
-
-import { List, Avatar, Spin, Badge } from "antd";
+import { List, Spin } from "antd";
 import { QueuesConsumer } from "../context/QueuesProvider";
-import format from "date-fns/format";
+import Queue from "./Queue";
+import { ComponentConnect } from "../context/contextHelper";
 
-const Queues = ({ scrollListener, loading, fetchMore }) => {
+const Queues = ({ scrollListener, loading, fetchMore, queues }) => {
+  const sortQueues = queues => {
+    return queues.sort((curr, next) => {
+      const { last_activity: lt1, timestamp: t1 } = curr;
+      const { last_activity: lt2, timestamp: t2 } = next;
+      let l1, l2;
+      l1 = lt1 ? new Date(lt1.timestamp).valueOf() : new Date(t1).valueOf();
+      l2 = lt2 ? new Date(lt2.timestamp).valueOf() : new Date(t2).valueOf();
+      return l2 - l1;
+    });
+  };
+
   return (
     <div onScroll={scrollListener} className="qs-con">
-      <QueuesConsumer>
-        {({ queues, selectedQueue, setSelectedQueue }) => (
-          <List
-            loading={loading}
-            className="qs"
-            bordered
-            dataSource={queues || []}
-            renderItem={({ _id, client, last_activity, timestamp }) => (
-              <List.Item
-                className={selectedQueue === _id ? "selected-q" : ""}
-                onClick={() => setSelectedQueue(_id)}
-                style={{ cursor: "pointer" }}
-                key={_id}
-              >
-                <List.Item.Meta
-                  avatar={
-                    <Badge count={1}>
-                      <Avatar icon="user" />
-                    </Badge>
-                  }
-                  title={client}
-                  description={
-                    last_activity
-                      ? last_activity.message.text
-                      : "Start conversation.."
-                  }
-                />
-                <div className="msg-timestamp">
-                  {last_activity
-                    ? format(last_activity.timestamp, "MM/DD/YY hh:mma")
-                    : format(timestamp, "MM/DD/YY hh:mma")}
-                </div>
-              </List.Item>
-            )}
-          >
-            {fetchMore ? (
-              <div className="loading-container">
-                <Spin tip="Fetching more queues..." />
-              </div>
-            ) : null}
-          </List>
-        )}
-      </QueuesConsumer>
+      <List
+        loading={loading}
+        className="qs"
+        bordered
+        dataSource={queues ? sortQueues(queues) : []}
+        renderItem={item => <Queue item={item} />}
+      >
+        {fetchMore ? (
+          <div className="loading-container">
+            <Spin tip="Fetching more queues..." />
+          </div>
+        ) : null}
+      </List>
     </div>
   );
 };
 
-export default Queues;
+export default ComponentConnect(["queues"], QueuesConsumer)(Queues);

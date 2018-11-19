@@ -5,11 +5,14 @@ import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 import { AuthProvider } from "./context/AuthProvider";
 import { QueuesProvider } from "./context/QueuesProvider";
+import { AgentProvider } from "./context/AgentProvider";
 
 ReactDOM.render(
   <AuthProvider>
     <QueuesProvider>
-      <App />
+      <AgentProvider>
+        <App />
+      </AgentProvider>
     </QueuesProvider>
   </AuthProvider>,
   document.getElementById("root")

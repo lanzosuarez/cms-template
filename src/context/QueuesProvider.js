@@ -7,12 +7,14 @@ export class QueuesProvider extends React.Component {
   state = {
     queues: null,
     totalCount: null,
-    selectedQueue: null
+    selectedQueue: null,
+    readQueue: null
   };
 
   setQueues = queues => this.setState({ queues });
   setTotalCount = totalCount => this.setState({ totalCount });
   setSelectedQueue = selectedQueue => this.setState({ selectedQueue });
+  setReadQueue = readQueue => this.setState({ readQueue });
 
   render() {
     return (
@@ -21,9 +23,11 @@ export class QueuesProvider extends React.Component {
           queues: this.state.queues,
           totalCount: this.state.totalCount,
           selectedQueue: this.state.selectedQueue,
+          readQueue: this.state.readQueue,
           setSelectedQueue: this.setSelectedQueue,
           setTotalCount: this.setTotalCount,
-          setQueues: this.setQueues
+          setQueues: this.setQueues,
+          setReadQueue: this.setReadQueue
         }}
       >
         {this.props.children}
