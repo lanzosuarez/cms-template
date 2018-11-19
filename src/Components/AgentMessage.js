@@ -20,6 +20,10 @@ class AgentMessage extends Component {
   toggleError = () => this.setState(({ error }) => ({ error: !error }));
 
   async componentDidMount() {
+    this.send();
+  }
+
+  send = async () => {
     const {
       message: { message: msg, newMsg }
     } = this.props;
@@ -35,7 +39,7 @@ class AgentMessage extends Component {
         this.createMessage();
       }
     }
-  }
+  };
 
   //handle drag and drop
   uploadFiles = async files => {
@@ -174,6 +178,7 @@ class AgentMessage extends Component {
     const {
       message: { timestamp }
     } = this.props;
+    const { error, loading } = this.state;
     return (
       <div className="agent-message-con message">
         <Avatar size="large" style={{ marginLeft: 15 }}>
@@ -183,7 +188,19 @@ class AgentMessage extends Component {
           {this.displayMessage()}
           <div style={{ display: "flex", alignItems: "center" }}>
             {this.statusIcon()}
-            <span>{formatIsTodayMessage(timestamp)}</span>
+            {!error && <span>{formatIsTodayMessage(timestamp)}</span>}
+            {error && !loading && (
+              <a
+                onClick={() => {
+                  if (!loading) {
+                    this.send();
+                  }
+                }}
+                style={{ color: "red", textDecoration: "underline" }}
+              >
+                Something went wrong. Click to resend
+              </a>
+            )}
           </div>
         </div>
       </div>
