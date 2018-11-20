@@ -70,10 +70,6 @@ class Conversations extends Component {
     window.setTimeout(() => (window.location.pathname = ""), 2000);
   };
 
-  socketEventListeners = () => {
-    this.listenForNewQueues();
-  };
-
   getQueues = () => {
     const { _id } = this.props.user;
     const { page, qName } = this.state;

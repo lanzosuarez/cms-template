@@ -13,6 +13,8 @@ import * as randomstring from "randomstring";
 import SocketService from "../services/SocketService";
 import { CLIENT_MESSAGE } from "../globals";
 
+const MESSAGE_PAGE_SIZE = 10;
+
 class Chat extends Component {
   state = {
     queue: null,
@@ -123,13 +125,12 @@ class Chat extends Component {
         this.getMessages(),
         this.getMessagesCount()
       ]);
-      this.toggleMessageLoading();
-      console.log(res);
       const [m, mcount] = res;
       const messages = m.data.data;
       const totalMessageCount = mcount.data.data;
       this.setMessagesState("messages", messages);
       this.setMessagesState("totalMessageCount", totalMessageCount);
+      this.toggleMessageLoading();
     } catch (error) {
       const { response } = error;
       if (response) {
@@ -162,6 +163,7 @@ class Chat extends Component {
   };
 
   getMoreMessages = async () => {
+    console.log("get more");
     try {
       const { page, messages } = this.state;
       const { selectedQueue } = this.props;
@@ -201,7 +203,8 @@ class Chat extends Component {
     if (
       scrollTop === 0 && //reacth the top most aprt
       !this.state.fetchMore && //check if fetching more messages
-      messages.length !== totalMessageCount //check if all messages are fetched
+      messages.length !== totalMessageCount && //check if all messages are fetched
+      totalMessageCount > MESSAGE_PAGE_SIZE
     ) {
       this.getMoreMessages();
     }

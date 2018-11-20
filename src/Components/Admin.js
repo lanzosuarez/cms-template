@@ -128,12 +128,12 @@ class Admin extends React.Component {
     } = this.props;
     return `${url}${key}`;
   };
-
+  
   render() {
     const {
       location: { pathname }
     } = this.props;
-    console.log(pathname);
+
     return (
       <Layout style={{ minHeight: "100vh" }}>
         <Sider theme="light" collapsed={this.state.collapsed}>

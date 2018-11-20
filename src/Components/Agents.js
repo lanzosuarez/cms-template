@@ -249,12 +249,7 @@ class Agents extends Component {
                 <span>{format(text, "MMM D, YYYY hh:mm A")}</span>
               )}
             />
-            <Column
-              title="Queued"
-              dataIndex="queued"
-              key="queued"
-              render={text => <span>0</span>}
-            />
+            <Column title="Queued" dataIndex="queued" key="queued" />
             <Column
               filterDropdown={() => this.searchSelect()}
               title="Status"
