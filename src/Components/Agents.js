@@ -135,7 +135,8 @@ class Agents extends Component {
     this.searchAgents();
   };
 
-  handleChangeSearch = (key, val, cb = {}) => this.setState({ [key]: val }, cb);
+  handleChangeSearch = (key, val, cb = () => {}) =>
+    this.setState({ [key]: val }, cb);
 
   searchDropDown = (state, placeholder) => (
     <div className="custom-filter-dropdown">

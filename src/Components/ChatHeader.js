@@ -14,7 +14,7 @@ export default ({ queue }) => {
             <h2>{client}</h2>
             <p> {format(timestamp,"MMMM DD, YYYY HH:mm A")}</p>
           </div>
-          <Button.Group size="default">
+          {/* <Button.Group size="default">
             <Button ghost>
               Mute
               <Icon type="disconnect" />
@@ -23,7 +23,7 @@ export default ({ queue }) => {
               Archive
               <Icon type="delete" />
             </Button>
-          </Button.Group>
+          </Button.Group> */}
         </Fragment>
       ) : null}
     </div>
