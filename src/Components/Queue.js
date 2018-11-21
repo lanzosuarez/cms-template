@@ -174,10 +174,12 @@ class Queue extends Component {
       selectedQueue
     } = this.props;
     const { unread } = this.state;
-
+    console.log(selectedQueue, _id);
     return (
       <List.Item
-        className={selectedQueue === _id ? "selected-q" : ""}
+        className={
+          selectedQueue === _id ? "selected-q queue-item" : "queue-item"
+        }
         onClick={() => setSelectedQueue(_id)}
         style={{ cursor: "pointer" }}
         key={_id}

@@ -125,9 +125,11 @@ class Admin extends React.Component {
           if (!inbox) {
             setQueues(null);
             setTotalCount(null);
-            // setSelectedQueue(_id);
             setInbox(true);
+            setSelectedQueue(_id);
             this.props.history.push("/a");
+          } else {
+            setSelectedQueue(_id);
           }
         }
       );

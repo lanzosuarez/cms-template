@@ -59,7 +59,10 @@ class Chat extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (prevProps.selectedQueue !== this.props.selectedQueue) {
+    if (
+      this.props.selectedQueue &&
+      prevProps.selectedQueue !== this.props.selectedQueue
+    ) {
       this.cancelGetQueue();
       this.getQueue();
       this.getMessageResources();
@@ -99,12 +102,16 @@ class Chat extends Component {
   getQueue = async () => {
     try {
       this.toggleLoading();
+      const { selectedQueue, setSelectedQueue } = this.props;
       const res = await QueueService.getQueue(
         this.props.selectedQueue,
         cancel => (this.cancelGetQueue = cancel),
         "",
         { qStatus: this.props.status }
       );
+
+      //need to reset selected props because unmounting the conversation sets the selected prop to null
+      setSelectedQueue(selectedQueue);
       this.setState({ queue: res.data.data });
       this.toggleLoading();
     } catch (error) {
@@ -397,7 +404,13 @@ class Chat extends Component {
 
 export default ComponentConnect(["user"], AuthConsumer)(
   ComponentConnect(
-    ["selectedQueue", "queues", "setQueues", "setReadQueue"],
+    [
+      "selectedQueue",
+      "queues",
+      "setQueues",
+      "setReadQueue",
+      "setSelectedQueue"
+    ],
     QueuesConsumer
   )(Chat)
 );

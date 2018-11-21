@@ -31,6 +31,7 @@ class Conversations extends Component {
     this.cancelGetQueuesCount();
     this.cancelGetMoreQueues();
     this.cancelSearchQueue();
+    console.log("set null");
     this.props.setSelectedQueue(null);
   }
 
