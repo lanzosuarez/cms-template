@@ -15,6 +15,7 @@ export const JOIN = "JOIN";
 export const LOGOUT = "LOGOUT";
 export const DISCONNECT = "ORDER";
 export const NEW_QUEUE = "NEW_QUEUE";
+export const END_QUEUE = "END_QUEUE";
 export const CLIENT_MESSAGE = "CLIENT_MESSAGE";
 export const ADMIN_MESSAGE = "ADMIN_MESSAGE";
 export const AGENT_MESSAGE = "AGENT_MESSAGE";

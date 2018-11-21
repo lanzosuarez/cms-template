@@ -101,7 +101,9 @@ class Chat extends Component {
       this.toggleLoading();
       const res = await QueueService.getQueue(
         this.props.selectedQueue,
-        cancel => (this.cancelGetQueue = cancel)
+        cancel => (this.cancelGetQueue = cancel),
+        "",
+        { qStatus: this.props.status }
       );
       this.setState({ queue: res.data.data });
       this.toggleLoading();
@@ -307,6 +309,7 @@ class Chat extends Component {
       files,
       more
     } = this.state;
+
     return (
       <Row
         className={queue ? "chat-con h100" : ""}
@@ -373,13 +376,17 @@ class Chat extends Component {
               sm={24}
               xs={24}
             >
-              <ChatInput
-                setFiles={this.setFiles}
-                sendMessage={this.sendMessage}
-                messageText={messageText}
-                handleChangeMessage={this.handleChangeMessage}
-                queue={queue}
-              />
+              {queue && queue.status === 1 ? (
+                <ChatInput
+                  setFiles={this.setFiles}
+                  sendMessage={this.sendMessage}
+                  messageText={messageText}
+                  handleChangeMessage={this.handleChangeMessage}
+                  queue={queue}
+                />
+              ) : (
+                queue && <span>This chat has ended</span>
+              )}
             </Col>
           </Fragment>
         )}

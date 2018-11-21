@@ -4,7 +4,7 @@ import { QueuesConsumer } from "../context/QueuesProvider";
 import Queue from "./Queue";
 import { ComponentConnect } from "../context/contextHelper";
 
-const Queues = ({ scrollListener, loading, fetchMore, queues }) => {
+const Queues = ({ scrollListener, loading, fetchMore, queues, status }) => {
   const sortQueues = queues => {
     return queues.sort((curr, next) => {
       const { last_activity: lt1, timestamp: t1 } = curr;
@@ -23,7 +23,7 @@ const Queues = ({ scrollListener, loading, fetchMore, queues }) => {
         className="qs"
         bordered
         dataSource={queues ? sortQueues(queues) : []}
-        renderItem={item => <Queue item={item} />}
+        renderItem={item => <Queue status={status} item={item} />}
       >
         {fetchMore ? (
           <div className="loading-container">

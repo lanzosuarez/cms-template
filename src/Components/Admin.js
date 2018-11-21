@@ -4,7 +4,7 @@ import { Layout, Menu, Icon, message, Button, notification } from "antd";
 import Conversations from "./Conversations";
 import { Route, withRouter } from "react-router-dom";
 import SocketService from "../services/SocketService";
-import { JOIN, NEW_QUEUE, CLIENT_MESSAGE } from "../globals";
+import { JOIN, NEW_QUEUE, CLIENT_MESSAGE, END_QUEUE } from "../globals";
 import { QueuesConsumer } from "../context/QueuesProvider";
 import { ComponentConnect } from "../context/contextHelper";
 import { AuthConsumer } from "../context/AuthProvider";
@@ -14,14 +14,19 @@ import Loading from "./Loading";
 const Agents = lazy(() => import("./Agents"));
 
 const { Header, Content, Sider } = Layout;
+const { SubMenu } = Menu;
 
 class Admin extends React.Component {
   state = {
-    collapsed: true,
+    collapsed: false,
     audio: new Audio(sound)
   };
 
   componentDidMount() {
+    //check if accessing archive first
+    if (this.props.match.url === "/a/archive") {
+      this.props.setInbox(false); //setibox to archive mode
+    }
     SocketService.initSocket();
     const { socket } = SocketService;
 
@@ -44,6 +49,7 @@ class Admin extends React.Component {
 
     this.listenForNewQueues();
     this.listenForClientMessage();
+    this.listenForEndQueue();
   }
 
   playAudio = () => {
@@ -51,9 +57,9 @@ class Admin extends React.Component {
     this.state.audio.play();
   };
 
-  openNotification = (title, description, cb = () => {}) => {
+  openNotification = (title, description, cb = () => {}, withAction = true) => {
     const key = `open${Date.now()}`;
-    const btn = (
+    const btn = withAction ? (
       <Button
         type="primary"
         size="small"
@@ -64,7 +70,7 @@ class Admin extends React.Component {
       >
         View
       </Button>
-    );
+    ) : null;
     notification.info({
       message: title,
       description,
@@ -101,19 +107,69 @@ class Admin extends React.Component {
         setQueues,
         totalCount,
         queues,
-        setSelectedQueue
+        setSelectedQueue,
+        inbox,
+        setInbox
       } = this.props;
       this.playAudio();
-      setTotalCount(totalCount + 1);
-      setQueues([queue, ...queues]);
-
-      //open notif
+      if (inbox) {
+        setTotalCount(totalCount + 1);
+        setQueues([queue, ...queues]);
+        //open notif
+      }
       const { client, _id } = queue;
-
       this.openNotification(
         "New ticket",
         `New ticket from ${client} has been assigned to you`,
-        () => setSelectedQueue(_id)
+        () => {
+          if (!inbox) {
+            setQueues(null);
+            setTotalCount(null);
+            // setSelectedQueue(_id);
+            setInbox(true);
+            this.props.history.push("/a");
+          }
+        }
+      );
+    });
+  };
+
+  listenForEndQueue = () => {
+    SocketService.listenToEvent(END_QUEUE, ({ queue }) => {
+      const {
+        setTotalCount,
+        setQueues,
+        totalCount,
+        queues,
+        setSelectedQueue,
+        selectedQueue,
+        inbox
+      } = this.props;
+      this.playAudio();
+      if (!inbox) {
+        //viewing archive
+        setTotalCount(totalCount + 1);
+        setQueues([queue, ...queues]);
+      } else {
+        //viewing inbox
+        const qIndex = queues.findIndex(q => q._id === queue._id);
+        if (qIndex > -1) {
+          setTotalCount(totalCount - 1);
+          queues.splice(qIndex, 1);
+          setQueues([...queues]);
+
+          if (selectedQueue === queue._id) {
+            setSelectedQueue(null);
+          }
+        }
+      }
+      //open notif
+      const { client, _id } = queue;
+      this.openNotification(
+        "Livechat End",
+        `${client} has ended the live chat. This ticket can be found in the archive`,
+        () => {},
+        false
       );
     });
   };
@@ -128,11 +184,20 @@ class Admin extends React.Component {
     } = this.props;
     return `${url}${key}`;
   };
-  
+
+  resetCache = inbox => {
+    const { setQueues, setTotalCount, setSelectedQueue, setInbox } = this.props;
+    setQueues(null);
+    setTotalCount(null);
+    setSelectedQueue(null);
+    setInbox(inbox);
+  };
+
   render() {
     const {
       location: { pathname }
     } = this.props;
+    console.log("Admin pathname", pathname);
 
     return (
       <Layout style={{ minHeight: "100vh" }}>
@@ -141,13 +206,39 @@ class Admin extends React.Component {
           <Menu
             theme="light"
             onSelect={this.onSelect}
+            selectedKeys={[pathname]}
             defaultSelectedKeys={[pathname]}
+            defaultOpenKeys={["conversation"]}
             mode="inline"
           >
-            <Menu.Item key={this.navItemUrl("")}>
-              <Icon type="message" />
-              <span>Conversations</span>
-            </Menu.Item>
+            <SubMenu
+              title={
+                <span>
+                  <Icon type="message" />
+                  Conversations
+                </span>
+              }
+              key={"conversation"}
+            >
+              <Menu.Item
+                onClick={() => {
+                  this.resetCache(true);
+                }}
+                key={this.navItemUrl("")}
+              >
+                <Icon type="inbox" />
+                <span>Inbox</span>
+              </Menu.Item>
+              <Menu.Item
+                onClick={() => {
+                  this.resetCache(false);
+                }}
+                key={this.navItemUrl("/archive")}
+              >
+                <Icon type="folder" />
+                <span>Archive</span>
+              </Menu.Item>
+            </SubMenu>
             <Menu.Item key={this.navItemUrl("/agents")}>
               <Icon type="user" />
               <span>Agents</span>
@@ -164,7 +255,16 @@ class Admin extends React.Component {
               overflow: "auto"
             }}
           >
-            <Route exact path={this.navItemUrl("")} component={Conversations} />
+            <Route
+              exact
+              path={this.navItemUrl("")}
+              render={() => <Conversations status={1} />}
+            />
+            <Route
+              exact
+              path={this.navItemUrl("/archive")}
+              render={() => <Conversations status={0} />}
+            />
             <Route
               path={this.navItemUrl("/agents")}
               render={() => (
@@ -182,7 +282,16 @@ class Admin extends React.Component {
 
 export default ComponentConnect(["user"], AuthConsumer)(
   ComponentConnect(
-    ["queues", "totalCount", "setQueues", "setTotalCount", "setSelectedQueue"],
+    [
+      "queues",
+      "totalCount",
+      "setQueues",
+      "setTotalCount",
+      "setSelectedQueue",
+      "setInbox",
+      "selectedQueue",
+      "inbox"
+    ],
     QueuesConsumer
   )(withRouter(Admin))
 );

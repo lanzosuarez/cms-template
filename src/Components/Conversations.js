@@ -74,7 +74,7 @@ class Conversations extends Component {
     const { _id } = this.props.user;
     const { page, qName } = this.state;
     return QueueService.getQueues(
-      { qAgent: _id, page, qName },
+      { qAgent: _id, page, qName, qStatus: this.props.status },
       cancelToken => (this.cancelGetQueues = cancelToken)
     );
   };
@@ -103,7 +103,7 @@ class Conversations extends Component {
     const { _id } = this.props.user;
     const { page, qName } = this.state;
     return QueueService.getQueuesCount(
-      { page, qName, qAgent: _id },
+      { page, qName, qAgent: _id, qStatus: this.props.status },
       cancelToken => (this.cancelGetQueuesCount = cancelToken)
     );
   };
@@ -118,7 +118,8 @@ class Conversations extends Component {
         {
           qAgent: _id,
           page: page + 1, //increment page
-          qName
+          qName,
+          qStatus: this.props.status
         },
         cancelToken => (this.cancelGetMoreQueues = cancelToken)
       );
@@ -170,13 +171,14 @@ class Conversations extends Component {
             handleSearch={this.handleSearch}
           />
           <Queues
+            status={this.props.status}
             loading={loading}
             fetchMore={fetchMore}
             scrollListener={this.scrollListener}
           />
         </Col>
         <Col xl={16} lg={16} md={16} sm={16} xs={16}>
-          <Chat />
+          <Chat status={this.props.status} />
         </Col>
       </Row>
     );

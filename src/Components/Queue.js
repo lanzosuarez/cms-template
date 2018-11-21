@@ -45,11 +45,15 @@ class Queue extends Component {
       const res = await QueueService.getQueue(
         this.props.item._id,
         token => (this.cancelGetQueue = token),
-        "client"
+        "client",
+        {
+          qStatus: this.props.status
+        }
       );
       this.setState({ client: res.data.data.client, queue: res.data.data._id });
     } catch (error) {
       console.error(error);
+      throw error;
     }
   };
 
@@ -165,7 +169,7 @@ class Queue extends Component {
 
   render() {
     const {
-      item: { _id, client, last_activity, timestamp },
+      item: { _id, client, last_activity, timestamp, status },
       setSelectedQueue,
       selectedQueue
     } = this.props;
@@ -188,7 +192,9 @@ class Queue extends Component {
           description={
             last_activity
               ? this.activityText(client, last_activity)
-              : "Start conversation"
+              : status === 1
+              ? "Start conversation"
+              : "This chat has ended"
           }
         />
         <div className="msg-timestamp">
