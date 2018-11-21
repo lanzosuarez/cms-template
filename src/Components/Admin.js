@@ -24,7 +24,7 @@ class Admin extends React.Component {
 
   componentDidMount() {
     //check if accessing archive first
-    if (this.props.match.url === "/a/archive") {
+    if (this.props.location.pathname === "/a/archive") {
       this.props.setInbox(false); //setibox to archive mode
     }
     SocketService.initSocket();
