@@ -31,7 +31,6 @@ class Conversations extends Component {
     this.cancelGetQueuesCount();
     this.cancelGetMoreQueues();
     this.cancelSearchQueue();
-    console.log("set null");
     this.props.setSelectedQueue(null);
   }
 
@@ -49,7 +48,6 @@ class Conversations extends Component {
       const [q, qcount] = res;
       const queues = q.data.data;
       const totalCount = qcount.data.data;
-
       //cache initital fetch
       this.props.setQueues(queues);
       this.props.setTotalCount(totalCount);
@@ -84,8 +82,7 @@ class Conversations extends Component {
     try {
       this.toggleLoading();
       const res = await this.getQueues();
-      console.log(res.data.data);
-      this.props.setQueues(res.data.data);
+      this.props.setQueues(this.mapWithUnread(res.data.data));
       this.toggleLoading();
     } catch (error) {
       const { response } = error;
@@ -125,7 +122,7 @@ class Conversations extends Component {
         cancelToken => (this.cancelGetMoreQueues = cancelToken)
       );
       this.toggleFetchMore();
-      const fetchedQueues = res.data.data;
+      const fetchedQueues = this.mapWithUnread(res.data.data);
 
       //add new queues to prev queues
       this.setState({ page: page + 1 });
@@ -159,6 +156,12 @@ class Conversations extends Component {
   handleInputChange = e => this.setState({ qName: e.target.value });
 
   handleSearch = () => this.searchQueues();
+
+  mapWithUnread = queues =>
+    queues.map(q => {
+      q.unread = 0;
+      return q;
+    });
 
   render() {
     const { fetchMore, loading } = this.state;

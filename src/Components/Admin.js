@@ -16,10 +16,11 @@ const Agents = lazy(() => import("./Agents"));
 const { Header, Content, Sider } = Layout;
 const { SubMenu } = Menu;
 
+const audio = new Audio(sound);
+
 class Admin extends React.Component {
   state = {
-    collapsed: false,
-    audio: new Audio(sound)
+    collapsed: false
   };
 
   componentDidMount() {
@@ -53,8 +54,8 @@ class Admin extends React.Component {
   }
 
   playAudio = () => {
-    // this.audio.currentTime = 0;
-    this.state.audio.play();
+    audio.currentTime = 0;
+    audio.play();
   };
 
   openNotification = (title, description, cb = () => {}, withAction = true) => {
@@ -89,14 +90,13 @@ class Admin extends React.Component {
 
   updateQueueLatestActivity = last_activity => {
     const { queue } = last_activity;
-    console.log(queue);
     let { queues, setQueues } = this.props;
     const qIndex = queues.findIndex(q => q._id === queue);
     if (qIndex > -1) {
       let q = queues[qIndex];
       q.last_activity = last_activity;
       queues.splice(qIndex, 1, q);
-      setQueues(queues);
+      setQueues([...queues]);
     }
   };
 
@@ -114,9 +114,11 @@ class Admin extends React.Component {
       this.playAudio();
       if (inbox) {
         setTotalCount(totalCount + 1);
-        setQueues([queue, ...queues]);
-        //open notif
+        queue.unread = 0; //assign an initial unread value
+        queues.push(queue);
+        setQueues(queues);
       }
+      //open notif
       const { client, _id } = queue;
       this.openNotification(
         "New ticket",
@@ -159,14 +161,13 @@ class Admin extends React.Component {
           setTotalCount(totalCount - 1);
           queues.splice(qIndex, 1);
           setQueues([...queues]);
-
           if (selectedQueue === queue._id) {
             setSelectedQueue(null);
           }
         }
       }
       //open notif
-      const { client, _id } = queue;
+      const { client } = queue;
       this.openNotification(
         "Livechat End",
         `${client} has ended the live chat. This ticket can be found in the archive`,
@@ -189,7 +190,7 @@ class Admin extends React.Component {
 
   resetCache = inbox => {
     const { setQueues, setTotalCount, setSelectedQueue, setInbox } = this.props;
-    setQueues(null);
+    setQueues([]);
     setTotalCount(null);
     setSelectedQueue(null);
     setInbox(inbox);
@@ -199,7 +200,6 @@ class Admin extends React.Component {
     const {
       location: { pathname }
     } = this.props;
-    console.log("Admin pathname", pathname);
 
     return (
       <Layout style={{ minHeight: "100vh" }}>

@@ -1,7 +1,7 @@
 import React, { Fragment } from "react";
 import format from "date-fns/format";
 
-import { Button, Icon } from "antd";
+// import { Button, Icon } from "antd";
 
 export default ({ queue }) => {
   const { client, timestamp } = queue || {};

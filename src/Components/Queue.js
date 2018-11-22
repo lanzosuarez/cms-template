@@ -5,56 +5,37 @@ import { formatIsToday } from "../helpers";
 import MessageService from "../services/MessageService";
 import SocketService from "../services/SocketService";
 import { CLIENT_MESSAGE } from "../globals";
-import QueueService from "../services/QueueService";
-import { ComponentConnect } from "../context/contextHelper";
-import { QueuesConsumer } from "../context/QueuesProvider";
+import { QueuesContext } from "../context/QueuesProvider";
 
 class Queue extends Component {
-  state = { unread: 0, client: "" };
+  static contextType = QueuesContext;
 
   cancelGetUnreads = () => {};
   cancelGetQueue = () => {};
-
-  componentWillMount() {
-    this.listenFormClientMessage();
-  }
 
   componentWillUnmount() {
     this.cancelGetUnreads();
     this.cancelGetQueue();
   }
 
+  UNSAFE_componentWillMount() {
+    this.listenFormClientMessage();
+  }
+
   componentDidMount() {
+    console.log("get unread", this.props.item.client);
     this.getUnreads();
-    this.getQueue();
   }
 
   componentDidUpdate() {
-    if (this.props.readQueue === this.props.item._id) {
+    if (this.context.readQueue === this.props.item._id) {
       this.clearUnread();
     }
   }
 
   clearUnread = () => {
-    this.setState({ unread: 0 });
-    this.props.setReadQueue(null);
-  };
-
-  getQueue = async () => {
-    try {
-      const res = await QueueService.getQueue(
-        this.props.item._id,
-        token => (this.cancelGetQueue = token),
-        "client",
-        {
-          qStatus: this.props.status
-        }
-      );
-      this.setState({ client: res.data.data.client, queue: res.data.data._id });
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
+    this.updateUnread(this.props.item._id, 0);
+    this.context.setReadQueue(null);
   };
 
   openNotification = (title, description, cb = () => {}) => {
@@ -98,13 +79,17 @@ class Queue extends Component {
         message: { queue } //incoming message q
       } = payload;
       const {
-        setSelectedQueue,
-        selectedQueue //open q
+        item: { client, _id: queueId, unread }
       } = this.props;
-      const { client, queue: queueId } = this.state; //state q
+      const { setSelectedQueue, selectedQueue } = this.context;
+
       if (!selectedQueue) {
+        console.log("new message no selected queue");
+        console.log(client);
+        console.log(queue, queueId);
+        console.log("------");
         if (queue === queueId) {
-          this.setState(({ unread }) => ({ unread: unread + 1 }));
+          this.updateUnread(queueId, unread + 1);
           this.openNotification(
             "New message",
             `New message from ${client}`,
@@ -112,17 +97,13 @@ class Queue extends Component {
           );
         }
       } else {
-        console.log("--------", this.state.client);
-        console.log(selectedQueue);
-        console.log(queueId);
-        console.log(queue);
         if (selectedQueue === queueId && queueId === queue) {
           this.openNotificationWithNoButton(
             "New message",
             `New message from ${client}`
           );
         } else if (selectedQueue !== queueId && queueId === queue) {
-          this.setState(({ unread }) => ({ unread: unread + 1 }));
+          this.updateUnread(queueId, unread + 1);
           this.openNotification(
             "New message",
             `New message from ${client}`,
@@ -133,6 +114,17 @@ class Queue extends Component {
     });
   }
 
+  updateUnread = (qId, unread) => {
+    const { queues, setQueues } = this.context;
+    const qIndex = queues.findIndex(q => q._id === qId);
+    if (qIndex > -1) {
+      const q = queues[qIndex];
+      q.unread = unread;
+      queues.splice(qIndex, 1, q);
+      setQueues(queues);
+    }
+  };
+
   getUnreads = async () => {
     try {
       const { _id } = this.props.item;
@@ -140,7 +132,8 @@ class Queue extends Component {
         { queue: _id },
         token => (this.cancelGetUnreads = token)
       );
-      this.setState({ unread: res.data.data });
+
+      this.updateUnread(_id, res.data.data);
     } catch (error) {
       console.error(error);
     }
@@ -169,12 +162,10 @@ class Queue extends Component {
 
   render() {
     const {
-      item: { _id, client, last_activity, timestamp, status },
-      setSelectedQueue,
-      selectedQueue
+      item: { _id, client, last_activity, timestamp, status, unread }
     } = this.props;
-    const { unread } = this.state;
-    console.log(selectedQueue, _id);
+    const { setSelectedQueue, selectedQueue } = this.context;
+
     return (
       <List.Item
         className={
@@ -209,14 +200,4 @@ class Queue extends Component {
   }
 }
 
-export default ComponentConnect(
-  [
-    "setReadQueue",
-    "readQueue",
-    "queues",
-    "setQueues",
-    "selectedQueue",
-    "setSelectedQueue"
-  ],
-  QueuesConsumer
-)(Queue);
+export default Queue;

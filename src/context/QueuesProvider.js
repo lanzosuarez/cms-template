@@ -5,7 +5,7 @@ export const QueuesConsumer = QueuesContext.Consumer;
 
 export class QueuesProvider extends React.Component {
   state = {
-    queues: null,
+    queues: [],
     totalCount: null,
     selectedQueue: null,
     readQueue: null,
