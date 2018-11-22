@@ -165,6 +165,7 @@ class Conversations extends Component {
 
   render() {
     const { fetchMore, loading } = this.state;
+    const { status, selectedQueue } = this.props;
     return (
       <Row className="conv-con h100" type="flex" justify="space-around">
         <Col className="bgw qlist" xl={7} lg={7} md={7} sm={7} xs={7}>
@@ -175,14 +176,14 @@ class Conversations extends Component {
             handleSearch={this.handleSearch}
           />
           <Queues
-            status={this.props.status}
+            status={status}
             loading={loading}
             fetchMore={fetchMore}
             scrollListener={this.scrollListener}
           />
         </Col>
         <Col xl={16} lg={16} md={16} sm={16} xs={16}>
-          <Chat status={this.props.status} />
+          {selectedQueue && <Chat status={this.props.status} />}
         </Col>
       </Row>
     );

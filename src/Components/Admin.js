@@ -156,6 +156,8 @@ class Admin extends React.Component {
         setQueues([queue, ...queues]);
       } else {
         //viewing inbox
+        console.log("end chat viewing inbox");
+        console.log(selectedQueue, queue._id);
         const qIndex = queues.findIndex(q => q._id === queue._id);
         if (qIndex > -1) {
           setTotalCount(totalCount - 1);
