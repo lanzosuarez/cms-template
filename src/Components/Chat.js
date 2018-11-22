@@ -54,7 +54,13 @@ class Chat extends Component {
 
   componentDidMount() {
     if (this.props.selectedQueue) {
+
       this.getQueue();
+      this.getMessageResources();
+      this.listenFormClientMessage();
+      this.readAllMessages();
+      this.props.setReadQueue(this.props.selectedQueue);
+      this.readAllMessages();
     }
   }
 
@@ -64,7 +70,6 @@ class Chat extends Component {
       prevProps.selectedQueue !== this.props.selectedQueue
     ) {
       this.cancelGetQueue();
-      this.getQueue();
       this.getMessageResources();
       this.listenFormClientMessage();
       this.readAllMessages();
@@ -129,6 +134,7 @@ class Chat extends Component {
 
   getMessageResources = async () => {
     try {
+      console.log("get message resources");
       this.toggleMessageLoading();
       const res = await Promise.all([
         this.getMessages(),
