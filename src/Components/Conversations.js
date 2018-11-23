@@ -31,7 +31,7 @@ class Conversations extends Component {
     this.cancelGetQueuesCount();
     this.cancelGetMoreQueues();
     this.cancelSearchQueue();
-    this.props.setSelectedQueue(null);
+    // this.props.setSelectedQueue(null);
   }
 
   async componentDidMount() {

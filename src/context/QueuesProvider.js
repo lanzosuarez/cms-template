@@ -13,7 +13,10 @@ export class QueuesProvider extends React.Component {
 
   setQueues = queues => this.setState({ queues });
   setTotalCount = totalCount => this.setState({ totalCount });
-  setSelectedQueue = selectedQueue => this.setState({ selectedQueue });
+  setSelectedQueue = selectedQueue => {
+    console.log("selected", selectedQueue);
+    this.setState({ selectedQueue });
+  };
   setReadQueue = readQueue => this.setState({ readQueue });
 
   render() {

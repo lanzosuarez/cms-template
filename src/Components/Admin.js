@@ -109,10 +109,12 @@ class Admin extends React.Component {
     if (!selectedQueue) {
       this.updateUnread(queue);
       this.openNotification("New message", `New message from ${client}`, () => {
+        console.log("here", queue);
         setSelectedQueue(queue);
         setReadQueue(queue);
-        setQueues([]);
-        setTotalCount(null);
+        if (!this.checkInbox()) {
+          setTotalCount(null);
+        }
         this.props.history.push("/a");
       });
     } else {

@@ -47,6 +47,7 @@ class Chat extends Component {
       messageLoading: false,
       fetchMore: false
     });
+    // this.props.setSelectedQueue(null);
   }
 
   toggleLoading = () => this.setState(({ loading }) => ({ loading: !loading }));

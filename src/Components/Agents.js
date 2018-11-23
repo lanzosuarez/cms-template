@@ -8,6 +8,8 @@ import AgentsHeader from "./AgentsHeader";
 import AddAgent from "./AddAgent";
 import EditAgent from "./EditAgent";
 import AgentDetails from "./AgentDetails";
+import { ComponentConnect } from "../context/contextHelper";
+import { QueuesConsumer } from "../context/QueuesProvider";
 
 const { Column } = Table;
 const { Search } = Input;
@@ -39,6 +41,7 @@ class Agents extends Component {
   }
 
   componentDidMount() {
+    this.props.setSelectedQueue(null); //set selected to queue to null
     const { totalAgentCount: tmc, agents: as } = this.context;
     //skip get if theres a cache version
     if (tmc && as) {
@@ -297,4 +300,4 @@ class Agents extends Component {
   }
 }
 
-export default Agents;
+export default ComponentConnect(["setSelectedQueue"], QueuesConsumer)(Agents);
