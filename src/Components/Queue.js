@@ -1,41 +1,39 @@
 import React, { Component } from "react";
-
 import { List, Avatar, Badge, notification, Button, Icon } from "antd";
 import { formatIsToday } from "../helpers";
 import MessageService from "../services/MessageService";
-import SocketService from "../services/SocketService";
-import { CLIENT_MESSAGE } from "../globals";
-import { QueuesContext } from "../context/QueuesProvider";
+import { QueuesConsumer } from "../context/QueuesProvider";
+import { ComponentConnect } from "../context/contextHelper";
 
 class Queue extends Component {
-  static contextType = QueuesContext;
-
   cancelGetUnreads = () => {};
   cancelGetQueue = () => {};
 
   componentWillUnmount() {
     this.cancelGetUnreads();
     this.cancelGetQueue();
+    // this.removeMessageListener();
+    // console.log("unmiunt");
   }
 
   UNSAFE_componentWillMount() {
-    this.listenFormClientMessage();
+    // this.listenFormClientMessage();
   }
 
   componentDidMount() {
-    console.log("get unread", this.props.item.client);
     this.getUnreads();
   }
 
   componentDidUpdate() {
-    if (this.context.readQueue === this.props.item._id) {
+    if (this.props.readQueue === this.props.item._id) {
       this.clearUnread();
     }
   }
 
   clearUnread = () => {
+    console.log("clear unread", this.props.item);
     this.updateUnread(this.props.item._id, 0);
-    this.context.setReadQueue(null);
+    this.props.setReadQueue(null);
   };
 
   openNotification = (title, description, cb = () => {}) => {
@@ -73,49 +71,47 @@ class Queue extends Component {
     });
   };
 
-  listenFormClientMessage() {
-    SocketService.listenToEvent(CLIENT_MESSAGE, payload => {
-      const {
-        message: { queue } //incoming message q
-      } = payload;
-      const {
-        item: { client, _id: queueId, unread }
-      } = this.props;
-      const { setSelectedQueue, selectedQueue } = this.context;
+  // handleClientMessage = payload => {
+  //   const {
+  //     message: { queue } //incoming message q
+  //   } = payload;
+  //   const {
+  //     item: { client, _id: queueId, unread }
+  //   } = this.props;
+  //   const { setSelectedQueue, selectedQueue } = this.props;
+  //   if (!selectedQueue) {
+  //     if (queue === queueId) {
+  //       console.log("new client q=qid");
+  //       this.updateUnread(queueId, unread + 1);
+  //       this.openNotification("New message", `New message from ${client}`, () =>
+  //         setSelectedQueue(queueId)
+  //       );
+  //     }
+  //   } else {
+  //     if (selectedQueue === queueId && queueId === queue) {
+  //       this.openNotificationWithNoButton(
+  //         "New message",
+  //         `New message from ${client}`
+  //       );
+  //     } else if (selectedQueue !== queueId && queueId === queue) {
+  //       this.updateUnread(queueId, unread + 1);
+  //       this.openNotification("New message", `New message from ${client}`, () =>
+  //         setSelectedQueue(queueId)
+  //       );
+  //     }
+  //   }
+  // };
 
-      if (!selectedQueue) {
-        console.log("new message no selected queue");
-        console.log(client);
-        console.log(queue, queueId);
-        console.log("------");
-        if (queue === queueId) {
-          this.updateUnread(queueId, unread + 1);
-          this.openNotification(
-            "New message",
-            `New message from ${client}`,
-            () => setSelectedQueue(queueId)
-          );
-        }
-      } else {
-        if (selectedQueue === queueId && queueId === queue) {
-          this.openNotificationWithNoButton(
-            "New message",
-            `New message from ${client}`
-          );
-        } else if (selectedQueue !== queueId && queueId === queue) {
-          this.updateUnread(queueId, unread + 1);
-          this.openNotification(
-            "New message",
-            `New message from ${client}`,
-            () => setSelectedQueue(queueId)
-          );
-        }
-      }
-    });
-  }
+  // removeMessageListener() {
+  //   SocketService.unListenToEvent(CLIENT_MESSAGE, this.handleClientMessage);
+  // }
+
+  // listenFormClientMessage() {
+  //   SocketService.listenToEvent(CLIENT_MESSAGE, this.handleClientMessage);
+  // }
 
   updateUnread = (qId, unread) => {
-    const { queues, setQueues } = this.context;
+    const { queues, setQueues } = this.props;
     const qIndex = queues.findIndex(q => q._id === qId);
     if (qIndex > -1) {
       const q = queues[qIndex];
@@ -160,18 +156,33 @@ class Queue extends Component {
     }
   };
 
+  updateNew = qId => {
+    const { queues, setQueues } = this.props;
+    const qIndex = queues.findIndex(q => q._id === qId);
+    if (qIndex > -1) {
+      const q = queues[qIndex];
+      q.new = false;
+      queues.splice(qIndex, 1, q);
+      setQueues(queues);
+    }
+  };
+
   render() {
     const {
-      item: { _id, client, last_activity, timestamp, status, unread }
+      item: { _id, client, last_activity, timestamp, status, unread}
     } = this.props;
-    const { setSelectedQueue, selectedQueue } = this.context;
+    const { setSelectedQueue, selectedQueue, setReadQueue } = this.props;
 
     return (
       <List.Item
         className={
           selectedQueue === _id ? "selected-q queue-item" : "queue-item"
         }
-        onClick={() => setSelectedQueue(_id)}
+        onClick={() => {
+          setSelectedQueue(_id);
+          setReadQueue(_id);
+          // this.updateNew(_id);
+        }}
         style={{ cursor: "pointer" }}
         key={_id}
       >
@@ -200,4 +211,14 @@ class Queue extends Component {
   }
 }
 
-export default Queue;
+export default ComponentConnect(
+  [
+    "setQueues",
+    "setSelectedQueue",
+    "selectedQueue",
+    "queues",
+    "setReadQueue",
+    "readQueue"
+  ],
+  QueuesConsumer
+)(Queue);

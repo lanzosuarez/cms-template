@@ -39,7 +39,9 @@ class ChatBox extends Component {
   }
 
   scrollToBottom = () => {
-    this.bottomAnchor.scrollIntoView({ behavior: "instant" });
+    if (this.bottomAnchor) {
+      this.bottomAnchor.scrollIntoView({ behavior: "instant" });
+    }
   };
 
   sortMessages = messages =>

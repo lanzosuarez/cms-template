@@ -1,5 +1,5 @@
-import React from "react";
-import { List, Spin } from "antd";
+import React, { Fragment } from "react";
+import { List, Spin, Tag } from "antd";
 import { QueuesConsumer } from "../context/QueuesProvider";
 import Queue from "./Queue";
 import { sortQueues } from "../helpers";
@@ -7,7 +7,6 @@ import { sortQueues } from "../helpers";
 const Queues = ({ scrollListener, loading, fetchMore, status }) => {
   const queueList = queues => (
     <List
-      split
       loading={loading}
       className="qs"
       bordered
@@ -23,14 +22,25 @@ const Queues = ({ scrollListener, loading, fetchMore, status }) => {
   );
 
   return (
-    <div onScroll={scrollListener} className="qs-con">
-      <QueuesConsumer>
-        {({ queues }) => {
-          const qs = [...queues];
-          return queueList(qs);
-        }}
-      </QueuesConsumer>
-    </div>
+    <QueuesConsumer>
+      {({ queues, totalCount }) => {
+        const qs = [...queues];
+        return (
+          <Fragment>
+            <div style={{ paddingLeft: 20, paddingBottom: 10 }}>
+              {!loading && !fetchMore && (
+                <Fragment>
+                  <Tag color="#2db7f5">Total Tickets: {totalCount}</Tag>
+                </Fragment>
+              )}
+            </div>
+            <div onScroll={scrollListener} className="qs-con">
+              {queueList(qs)}
+            </div>
+          </Fragment>
+        );
+      }}
+    </QueuesConsumer>
   );
 };
 

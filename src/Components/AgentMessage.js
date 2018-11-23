@@ -119,8 +119,8 @@ class AgentMessage extends Component {
             <Icon
               className="msg-icon"
               type="check-circle"
-              theme="twoTone"
-              twoToneColor="#52c41a"
+              theme="filled"
+              style={{ color: "var(--blue)", border: "var(--blue)" }}
             />
           );
         }

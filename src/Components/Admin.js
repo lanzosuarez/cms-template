@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from "react";
-import { Layout, Menu, Icon, message, Button, notification } from "antd";
+import { Layout, Menu, Icon, message, Button, notification, Badge } from "antd";
 
 import Conversations from "./Conversations";
 import { Route, withRouter } from "react-router-dom";
@@ -20,14 +20,19 @@ const audio = new Audio(sound);
 
 class Admin extends React.Component {
   state = {
-    collapsed: false
+    collapsed: false,
+    newQueues: 0
   };
 
+  cancelGetInboxCount = () => {};
+  cancelGetArchiveCount = () => {};
+
+  componentWillUnmount() {
+    this.cancelGetArchiveCount();
+    this.cancelGetInboxCount();
+  }
+
   componentDidMount() {
-    //check if accessing archive first
-    if (this.props.location.pathname === "/a/archive") {
-      this.props.setInbox(false); //setibox to archive mode
-    }
     SocketService.initSocket();
     const { socket } = SocketService;
 
@@ -52,6 +57,13 @@ class Admin extends React.Component {
     this.listenForClientMessage();
     this.listenForEndQueue();
   }
+
+  checkInbox = () => {
+    if (this.props.location.pathname === "/a") {
+      return true;
+    }
+    return false;
+  };
 
   playAudio = () => {
     audio.currentTime = 0;
@@ -81,11 +93,61 @@ class Admin extends React.Component {
     });
   };
 
-  listenForClientMessage = () => {
-    SocketService.listenToEvent(CLIENT_MESSAGE, payload => {
-      this.playAudio();
-      this.updateQueueLatestActivity(payload.message);
-    });
+  handleClientMessage = payload => {
+    const {
+      message: { queue }, //incoming message q
+      queue: { client }
+    } = payload;
+    const {
+      setSelectedQueue,
+      selectedQueue,
+      setReadQueue,
+      setQueues,
+      setTotalCount
+    } = this.props;
+    this.playAudio();
+    if (!selectedQueue) {
+      this.updateUnread(queue);
+      this.openNotification("New message", `New message from ${client}`, () => {
+        setSelectedQueue(queue);
+        setReadQueue(queue);
+        setQueues([]);
+        setTotalCount(null);
+        this.props.history.push("/a");
+      });
+    } else {
+      if (selectedQueue === queue) {
+        this.openNotificationWithNoButton(
+          "New message",
+          `New message from ${client}`
+        );
+      } else if (selectedQueue !== queue) {
+        this.updateUnread(queue);
+        this.openNotification(
+          "New message",
+          `New message from ${client}`,
+          () => {
+            setSelectedQueue(queue);
+            setReadQueue(queue);
+          }
+        );
+      }
+    }
+  };
+
+  listenForClientMessage() {
+    SocketService.listenToEvent(CLIENT_MESSAGE, this.handleClientMessage);
+  }
+
+  updateUnread = qId => {
+    const { queues, setQueues } = this.props;
+    const qIndex = queues.findIndex(q => q._id === qId);
+    if (qIndex > -1) {
+      const q = queues[qIndex];
+      q.unread = q.unread + 1;
+      queues.splice(qIndex, 1, q);
+      setQueues(queues);
+    }
   };
 
   updateQueueLatestActivity = last_activity => {
@@ -107,16 +169,19 @@ class Admin extends React.Component {
         setQueues,
         totalCount,
         queues,
-        setSelectedQueue,
-        inbox,
-        setInbox
+        setSelectedQueue
       } = this.props;
       this.playAudio();
-      if (inbox) {
+      if (this.checkInbox()) {
+        //viewing inbox
         setTotalCount(totalCount + 1);
         queue.unread = 0; //assign an initial unread value
         queues.push(queue);
         setQueues(queues);
+      } else {
+        if (!this.checkInbox()) {
+          this.setState(({ newQueues }) => ({ newQueues: newQueues + 1 }));
+        }
       }
       //open notif
       const { client, _id } = queue;
@@ -124,14 +189,15 @@ class Admin extends React.Component {
         "New ticket",
         `New ticket from ${client} has been assigned to you`,
         () => {
-          if (!inbox) {
-            setQueues(null);
+          if (!this.checkInbox()) {
+            setQueues([]);
             setTotalCount(null);
-            setInbox(true);
             setSelectedQueue(_id);
             this.props.history.push("/a");
           } else {
-            setSelectedQueue(_id);
+            if (this.checkInbox()) {
+              setSelectedQueue(_id);
+            }
           }
         }
       );
@@ -146,42 +212,62 @@ class Admin extends React.Component {
         totalCount,
         queues,
         setSelectedQueue,
-        selectedQueue,
-        inbox
+        selectedQueue
       } = this.props;
       this.playAudio();
-      if (!inbox) {
+      if (!this.checkInbox()) {
         //viewing archive
         setTotalCount(totalCount + 1);
         setQueues([queue, ...queues]);
       } else {
         //viewing inbox
-        console.log("end chat viewing inbox");
-        console.log(selectedQueue, queue._id);
         const qIndex = queues.findIndex(q => q._id === queue._id);
         if (qIndex > -1) {
           setTotalCount(totalCount - 1);
           queues.splice(qIndex, 1);
           setQueues([...queues]);
           if (selectedQueue === queue._id) {
-            setSelectedQueue(null);
+            setSelectedQueue(selectedQueue);
           }
         }
       }
-      //open notif
+      //open notif depengs on what youre viewing
       const { client } = queue;
-      this.openNotification(
-        "Livechat End",
-        `${client} has ended the live chat. This ticket can be found in the archive`,
-        () => {},
-        false
-      );
+      if (this.checkInbox()) {
+        this.openNotification(
+          "Livechat End",
+          `${client} has ended the live chat. This ticket can be found in the archive`,
+          () => {},
+          false
+        );
+      } else {
+        this.openNotification(
+          "Livechat End",
+          `${client} has ended the live chat. This ticket has been added in the archive`,
+          () => {},
+          false
+        );
+      }
+    });
+  };
+
+  openNotificationWithNoButton = (title, description) => {
+    const key = `open${Date.now()}`;
+    const btn = null;
+    notification.info({
+      message: title,
+      description,
+      btn,
+      key,
+      duration: 10
     });
   };
 
   joinSocket = () => SocketService.emitEvent(JOIN, this.props.user._id);
 
   onSelect = ({ key }) => this.props.history.push(key);
+
+  clearNew;
 
   navItemUrl = key => {
     const {
@@ -190,13 +276,14 @@ class Admin extends React.Component {
     return `${url}${key}`;
   };
 
-  resetCache = inbox => {
-    const { setQueues, setTotalCount, setSelectedQueue, setInbox } = this.props;
+  resetCache = () => {
+    const { setQueues, setTotalCount, setSelectedQueue } = this.props;
     setQueues([]);
     setTotalCount(null);
     setSelectedQueue(null);
-    setInbox(inbox);
   };
+
+  clearNew = () => this.setState({ newQueues: 0 });
 
   render() {
     const {
@@ -232,6 +319,11 @@ class Admin extends React.Component {
               >
                 <Icon type="inbox" />
                 <span>Inbox</span>
+
+                <Badge
+                  count={this.state.newQueues}
+                  style={{ backgroundColor: "var(--new)", marginLeft: 5 }}
+                />
               </Menu.Item>
               <Menu.Item
                 onClick={() => {
@@ -262,7 +354,9 @@ class Admin extends React.Component {
             <Route
               exact
               path={this.navItemUrl("")}
-              render={() => <Conversations status={1} />}
+              render={() => (
+                <Conversations clearNew={this.clearNew} status={1} />
+              )}
             />
             <Route
               exact
@@ -292,9 +386,8 @@ export default ComponentConnect(["user"], AuthConsumer)(
       "setQueues",
       "setTotalCount",
       "setSelectedQueue",
-      "setInbox",
       "selectedQueue",
-      "inbox"
+      "setReadQueue"
     ],
     QueuesConsumer
   )(withRouter(Admin))

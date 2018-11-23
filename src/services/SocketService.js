@@ -18,6 +18,10 @@ class SocketService {
   static listenToEvent(event, cb) {
     this.socket.on(event, payload => cb(payload));
   }
+
+  static unListenToEvent(event, func) {
+    this.socket.removeListener(event, func);
+  }
 }
 
 export default SocketService;

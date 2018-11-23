@@ -11,7 +11,7 @@ import ChatInput from "./ChatInput";
 import { AuthConsumer } from "../context/AuthProvider";
 import * as randomstring from "randomstring";
 import SocketService from "../services/SocketService";
-import { CLIENT_MESSAGE } from "../globals";
+import { CLIENT_MESSAGE, END_QUEUE } from "../globals";
 
 const MESSAGE_PAGE_SIZE = 10;
 
@@ -41,6 +41,12 @@ class Chat extends Component {
     this.cancelGetMessages();
     this.cancelGetMoreMessages();
     this.cancelReadMessages();
+    this.setState({
+      loading: false,
+      queue: null,
+      messageLoading: false,
+      fetchMore: false
+    });
   }
 
   toggleLoading = () => this.setState(({ loading }) => ({ loading: !loading }));
@@ -54,12 +60,10 @@ class Chat extends Component {
 
   componentDidMount() {
     if (this.props.selectedQueue) {
-
+      this.listenForEndQueue();
+      this.listenFormClientMessage();
       this.getQueue();
       this.getMessageResources();
-      this.listenFormClientMessage();
-      this.readAllMessages();
-      this.props.setReadQueue(this.props.selectedQueue);
       this.readAllMessages();
     }
   }
@@ -70,10 +74,8 @@ class Chat extends Component {
       prevProps.selectedQueue !== this.props.selectedQueue
     ) {
       this.cancelGetQueue();
+      this.getQueue();
       this.getMessageResources();
-      this.listenFormClientMessage();
-      this.readAllMessages();
-      this.props.setReadQueue(this.props.selectedQueue);
       this.readAllMessages();
     }
   }
@@ -93,6 +95,15 @@ class Chat extends Component {
           messages: [payload.message, ...messages]
         }));
         this.readAllMessages();
+      }
+    });
+  };
+
+  listenForEndQueue = () => {
+    SocketService.listenToEvent(END_QUEUE, ({ queue }) => {
+      console.log("here");
+      if (queue._id === this.state.queue._id) {
+        this.setState({ queue: { ...this.state.queue, status: 0 } });
       }
     });
   };
