@@ -133,6 +133,7 @@ class Admin extends React.Component {
         );
       }
     }
+    this.updateQueueLatestActivity(payload.message);
   };
 
   listenForClientMessage() {
