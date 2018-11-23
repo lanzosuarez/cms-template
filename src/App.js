@@ -9,6 +9,8 @@ import Login from "./Components/Login";
 import UserService from "./services/UserService";
 import Loading from "./Components/Loading";
 import { AuthContext } from "./context/AuthProvider";
+import SocketService from "./services/SocketService";
+import { LOGOUT } from "./globals";
 
 const Admin = lazy(() => import("./Components/Admin"));
 
@@ -17,6 +19,10 @@ class App extends Component {
   state = { loading: false };
 
   toggleLoading = () => this.setState(({ loading }) => ({ loading: !loading }));
+
+  UNSAFE_componentWillMount() {
+    this.handleUnload();
+  }
 
   async componentDidMount() {
     try {
@@ -34,6 +40,12 @@ class App extends Component {
       }
     }
   }
+
+  handleUnload = () => {
+    window.onbeforeunload = function() {
+      SocketService.emitEvent(LOGOUT, {});
+    };
+  };
 
   render() {
     return (
