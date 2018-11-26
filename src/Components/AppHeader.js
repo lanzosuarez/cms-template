@@ -11,7 +11,7 @@ const AppHeader = () => {
 
   const menu = (
     <Menu>
-      <Menu.Item onClick={logout}>Logout</Menu.Item>
+      <Menu.Item onClick={logout}>Log Out</Menu.Item>
     </Menu>
   );
 

@@ -1,5 +1,14 @@
 import React, { lazy, Suspense } from "react";
-import { Layout, Menu, Icon, message, Button, notification, Badge } from "antd";
+import {
+  Layout,
+  Menu,
+  Icon,
+  message,
+  Button,
+  notification,
+  Badge,
+  Tooltip
+} from "antd";
 
 import Conversations from "./Conversations";
 import { Route, withRouter } from "react-router-dom";
@@ -323,10 +332,12 @@ class Admin extends React.Component {
                 <Icon type="inbox" />
                 <span>Inbox</span>
 
-                <Badge
-                  count={this.state.newQueues}
-                  style={{ backgroundColor: "var(--new)", marginLeft: 5 }}
-                />
+                <Tooltip title="New tickets">
+                  <Badge
+                    count={this.state.newQueues}
+                    style={{ backgroundColor: "var(--new)", marginLeft: 5 }}
+                  />
+                </Tooltip>
               </Menu.Item>
               <Menu.Item
                 onClick={() => {
