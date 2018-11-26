@@ -4,13 +4,13 @@ export const AUTH_SERVICE_URL =
 export const API_URL =
   process.env.NODE_ENV !== "production"
     ? "http://localhost:3000/api/v1"
-    : "https://sm-supermalls-api.azurewebsites.net/api/v1";
+    : "https://levis-api.azurewebsites.net/api/v1";
 
 export const CLOUDINARY_UPLOAD_PRESET = "s3aqucwc";
 export const CLOUDINARY_URL =
   "https://api.cloudinary.com/v1_1/chatbotph/upload";
 
-export const APP_NAME = "smsupermalls";
+export const APP_NAME = "levis";
 export const JOIN = "JOIN";
 export const LOGOUT = "LOGOUT";
 export const DISCONNECT = "ORDER";
