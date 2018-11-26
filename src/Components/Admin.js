@@ -10,10 +10,11 @@ import { ComponentConnect } from "../context/contextHelper";
 import { AuthConsumer } from "../context/AuthProvider";
 import sound from "../assets/new_message.mp3";
 import Loading from "./Loading";
+import AppHeader from "./AppHeader";
 
 const Agents = lazy(() => import("./Agents"));
 
-const { Header, Content, Sider } = Layout;
+const { Content, Sider } = Layout;
 const { SubMenu } = Menu;
 
 const audio = new Audio(sound);
@@ -102,7 +103,6 @@ class Admin extends React.Component {
       setSelectedQueue,
       selectedQueue,
       setReadQueue,
-      setQueues,
       setTotalCount
     } = this.props;
     this.playAudio();
@@ -345,7 +345,7 @@ class Admin extends React.Component {
           </Menu>
         </Sider>
         <Layout>
-          <Header style={{ padding: 0 }} />
+          <AppHeader />
           <Content
             style={{
               minWidth: 1000,
