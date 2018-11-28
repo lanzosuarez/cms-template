@@ -22,6 +22,8 @@ import Loading from "./Loading";
 import AppHeader from "./AppHeader";
 
 const Agents = lazy(() => import("./Agents"));
+const Skus = lazy(() => import("./Skus"));
+const Products = lazy(() => import("./Products"));
 
 const { Content, Sider } = Layout;
 const { SubMenu } = Menu;
@@ -311,9 +313,13 @@ class Admin extends React.Component {
             onSelect={this.onSelect}
             selectedKeys={[pathname]}
             defaultSelectedKeys={[pathname]}
-            defaultOpenKeys={["conversation"]}
+            defaultOpenKeys={["conversation", "sku"]}
             mode="inline"
           >
+            <Menu.Item key={this.navItemUrl("/analytics")}>
+              <Icon type="dashboard" />
+              <span>Analytics</span>
+            </Menu.Item>
             <SubMenu
               title={
                 <span>
@@ -349,9 +355,35 @@ class Admin extends React.Component {
                 <span>Archive</span>
               </Menu.Item>
             </SubMenu>
+            <SubMenu
+              title={
+                <span>
+                  <Icon type="shop" />
+                  SKU Management
+                </span>
+              }
+              key={"sku"}
+            >
+              <Menu.Item key={this.navItemUrl("/sku")}>
+                <Icon type="tag" />
+                <span>SKU's</span>
+              </Menu.Item>
+              <Menu.Item key={this.navItemUrl("/product")}>
+                <Icon type="tag" />
+                <span>Products</span>
+              </Menu.Item>
+              <Menu.Item key={this.navItemUrl("/product-group")}>
+                <Icon type="tag" />
+                <span>Product Group</span>
+              </Menu.Item>
+            </SubMenu>
             <Menu.Item key={this.navItemUrl("/agents")}>
-              <Icon type="user" />
-              <span>Agents</span>
+              <Icon type="team" />
+              <span>Agent Management</span>
+            </Menu.Item>
+            <Menu.Item key={this.navItemUrl("/blast")}>
+              <Icon type="notification" />
+              <span>Blast</span>
             </Menu.Item>
           </Menu>
         </Sider>
@@ -382,6 +414,22 @@ class Admin extends React.Component {
               render={() => (
                 <Suspense fallback={<Loading />}>
                   <Agents />
+                </Suspense>
+              )}
+            />
+            <Route
+              path={this.navItemUrl("/sku")}
+              render={() => (
+                <Suspense fallback={<Loading />}>
+                  <Skus />
+                </Suspense>
+              )}
+            />
+            <Route
+              path={this.navItemUrl("/product")}
+              render={() => (
+                <Suspense fallback={<Loading />}>
+                  <Products />
                 </Suspense>
               )}
             />

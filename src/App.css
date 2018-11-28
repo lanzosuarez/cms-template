@@ -332,3 +332,17 @@ img.msg-img {
   color: white !important;
   cursor: pointer;
 }
+
+.steps-con {
+  /* text-align: center; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 20px;
+}
+
+.cat-filter {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #ccc;
+}

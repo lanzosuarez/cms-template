@@ -6,12 +6,15 @@ import * as serviceWorker from "./serviceWorker";
 import { AuthProvider } from "./context/AuthProvider";
 import { QueuesProvider } from "./context/QueuesProvider";
 import { AgentProvider } from "./context/AgentProvider";
+import { SkuProvider } from "./context/SkuProvider";
 
 ReactDOM.render(
   <AuthProvider>
     <QueuesProvider>
       <AgentProvider>
-        <App />
+        <SkuProvider>
+          <App />
+        </SkuProvider>
       </AgentProvider>
     </QueuesProvider>
   </AuthProvider>,

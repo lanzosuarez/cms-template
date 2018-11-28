@@ -35,15 +35,19 @@ class Conversations extends Component {
   }
 
   async componentDidMount() {
+    if (this.props.status === 1) {
+      this.props.clearNew();
+    }
+    const { totalCount: tc, queues: qs } = this.props;
+    //skip get if theres a cache version
+    if (tc && qs) {
+      return;
+    }
+    this.fetchResources();
+  }
+
+  fetchResources = async () => {
     try {
-      if (this.props.status === 1) {
-        this.props.clearNew();
-      }
-      const { totalCount: tc, queues: qs } = this.props;
-      //skip get if theres a cache version
-      if (tc && qs) {
-        return;
-      }
       this.toggleLoading();
       const res = await Promise.all([this.getQueues(), this.getQueuesCount()]);
       this.toggleLoading();
@@ -52,7 +56,7 @@ class Conversations extends Component {
       const queues = q.data.data;
       const totalCount = qcount.data.data;
       //cache initital fetch
-      this.props.setQueues(queues);
+      this.props.setQueues(this.mapWithUnread(queues));
       this.props.setTotalCount(totalCount);
     } catch (error) {
       const { response } = error;
@@ -65,7 +69,7 @@ class Conversations extends Component {
         message.error(response.errorMessage);
       }
     }
-  }
+  };
 
   gotoHome = () => {
     message.warn("Your session has expired. Logging you out");
@@ -81,24 +85,7 @@ class Conversations extends Component {
     );
   };
 
-  searchQueues = async () => {
-    try {
-      this.toggleLoading();
-      const res = await this.getQueues();
-      this.props.setQueues(this.mapWithUnread(res.data.data));
-      this.toggleLoading();
-    } catch (error) {
-      const { response } = error;
-      if (response) {
-        this.toggleLoading();
-        if (response.status === 401) {
-          this.gotoHome();
-          return;
-        }
-        message.error(response.errorMessage);
-      }
-    }
-  };
+  searchQueues = async () => this.fetchResources();
 
   getQueuesCount = () => {
     const { _id } = this.props.user;

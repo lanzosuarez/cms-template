@@ -20,3 +20,6 @@ export const sortQueues = queues =>
     l2 = lt2 ? new Date(lt2.timestamp).valueOf() : new Date(t2).valueOf();
     return l2 - l1;
   });
+
+export const formatPrice = price =>
+  price.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, "$&,");
