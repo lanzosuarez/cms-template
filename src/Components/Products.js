@@ -37,9 +37,9 @@ class Products extends Component {
   }
 
   componentDidMount() {
-    const { totalSkuCount: tsc, skus: s } = this.props;
+    const { totalProductCount: tsc, products: p } = this.props;
     //skip get if theres a cache version
-    if (tsc !== null && s) {
+    if (tsc !== null && p) {
       return;
     }
     this.fetchResources();
