@@ -11,7 +11,7 @@ const ProductDetails = props => {
   return (
     <Row type="flex" justify="space-between">
       <Col xl={8} lg={8} md={8} sm={8} xs={8}>
-        <Card style={{ marginTop: 14 }}>
+        <Card>
           <Meta
             avatar={<Avatar>{name[0]}</Avatar>}
             title={

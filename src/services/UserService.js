@@ -13,6 +13,12 @@ class UserService {
     );
   }
 
+  static logout(id) {
+    return axios.get(`${AUTH_SERVICE_URL}/user/signout/${id}`, {
+      headers: { "authorization-token": token }
+    });
+  }
+
   static validateToken() {
     return axios.get(`${AUTH_SERVICE_URL}/user/validate`, {
       headers: { "authorization-token": token }
