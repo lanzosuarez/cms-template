@@ -24,7 +24,7 @@ const SkuDetails = props => {
           <div>
             <span>&#8369; {formatPrice(price)}</span> <br />
             <span>
-              Added: &nbsp; {format(timestamp, "MMM DD, YYYY hh:mm a")}
+              Added: &nbsp; {format(timestamp, "MMM DD, YYYY")}
             </span>
           </div>
         }

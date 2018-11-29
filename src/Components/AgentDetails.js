@@ -22,7 +22,7 @@ const AgentDetails = props => {
         description={
           <div>
             <span>{email}</span> <br />
-            <span>{format(timestamp, "MMM DD, YYYY hh:mm a")}</span>
+            <span>{format(timestamp, "MMM DD, YYYY")}</span>
           </div>
         }
       />

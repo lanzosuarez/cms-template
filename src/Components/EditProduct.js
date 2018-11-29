@@ -41,11 +41,11 @@ class EditProduct extends Component {
   toggleLoading = () => this.setState({ loading: !this.state.loading });
   toggleFetching = () => this.setState({ fetching: !this.state.fetching });
 
-  cancelCreateProduct = () => {};
+  cancelUpdateProduct = () => {};
   cancelSearchSku = () => {};
 
   componentWillUnmount() {
-    this.cancelCreateProduct();
+    this.cancelUpdateProduct();
     this.cancelSearchSku();
   }
 
@@ -84,7 +84,13 @@ class EditProduct extends Component {
     this.props.form.validateFields(async (err, values) => {
       if (!err) {
         const { name, description, skus } = values;
-        this.createProduct({
+        // console.log({
+        //   app: APP_NAME,
+        //   name,
+        //   description,
+        //   skus: skus.map(s => s.key)
+        // });
+        this.updateProduct({
           app: APP_NAME,
           name,
           description,
@@ -96,17 +102,17 @@ class EditProduct extends Component {
     });
   };
 
-  createProduct = async payload => {
+  updateProduct = async payload => {
     try {
       const { setSelectedProduct, fetchResources } = this.props;
       this.setState({ err: false });
       this.toggleLoading();
-      await SkuService.addProduct(
+      await SkuService.updateProduct(
         payload,
-        token => (this.cancelCreateProduct = token)
+        this.props.selectedProduct._id,
+        token => (this.cancelUpdateProduct = token)
       );
       this.toggleLoading();
-
       setSelectedProduct(null);
       fetchResources();
     } catch (error) {
@@ -229,7 +235,7 @@ class EditProduct extends Component {
           <FormItem {...formItemLayout} label="Sku's">
             {getFieldDecorator("skus", {
               initialValue: sks.map(s => ({
-                key: s.name,
+                key: s._id,
                 label: <Tooltip title={s.taxonomy.join(",")}>{s.name}</Tooltip>
               }))
             })(

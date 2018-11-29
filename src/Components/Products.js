@@ -180,7 +180,7 @@ class Products extends Component {
       <Row className="agents-con" type="flex" justify="center">
         <Col className="agents-col" xl={23} lg={23} md={23} sm={23} xs={23}>
           <Table
-            expandedRowRender={record => <ProductDetails sku={record} />}
+            expandedRowRender={record => <ProductDetails product={record} />}
             title={() => (
               <SkuHeader
                 toggleShowAdd={this.toggleShowAdd}

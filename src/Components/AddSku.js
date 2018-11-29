@@ -48,8 +48,8 @@ class AddSku extends Component {
           price,
           image,
           image_link,
-          taxonomy,
-          product_code
+          taxonomy
+          // product_code
         } = values;
         let images;
         if (image) {
@@ -65,8 +65,8 @@ class AddSku extends Component {
           price,
           images,
           taxonomy: taxonomy.map(t => t.toLowerCase()),
-          brand: BRAND,
-          product_code
+          brand: BRAND
+          // product_code
         });
       } else {
         console.log(err);
@@ -230,7 +230,7 @@ class AddSku extends Component {
               showIcon
             />
           )}
-          <FormItem {...formItemLayout} label="Product Code">
+          {/* <FormItem {...formItemLayout} label="Product Code">
             {getFieldDecorator("product_code", {
               rules: [
                 {
@@ -239,7 +239,7 @@ class AddSku extends Component {
                 }
               ]
             })(<Input />)}
-          </FormItem>
+          </FormItem> */}
           <FormItem {...formItemLayout} label="Product Name">
             {getFieldDecorator("name", {
               rules: [

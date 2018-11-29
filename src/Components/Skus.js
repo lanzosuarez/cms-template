@@ -247,12 +247,12 @@ class Skus extends Component {
                 : null
             }
           >
-            <Column
+            {/* <Column
               filterDropdown={() => this.searchDropDown("qName", "name")}
               title="Product-code"
               dataIndex="product_code"
               key="product_code"
-            />
+            /> */}
             <Column
               filterDropdown={() => this.searchDropDown("qName", "name")}
               title="Name"

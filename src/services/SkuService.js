@@ -57,4 +57,11 @@ export default class SkuService {
       cancelToken: new CancelToken(cancel)
     });
   }
+
+  static updateProduct(data, id, cancel) {
+    return axios.patch(`${SKU_URL}/product/${id}`, data, {
+      headers: { "authorization-token": token },
+      cancelToken: new CancelToken(cancel)
+    });
+  }
 }
