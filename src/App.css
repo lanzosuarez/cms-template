@@ -346,3 +346,9 @@ img.msg-img {
   justify-content: space-between;
   border-top: 1px solid #ccc;
 }
+
+.add-prod-sku-opt {
+  display: flex;
+  justify-content: space-between;
+  padding: 2;
+}

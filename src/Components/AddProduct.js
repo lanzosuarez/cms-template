@@ -7,9 +7,9 @@ import {
   Button,
   message,
   Alert,
-  Steps,
   Select,
-  Spin
+  Spin,
+  Tooltip
 } from "antd";
 
 import debounce from "lodash/debounce";
@@ -19,7 +19,6 @@ import SkuService from "../services/SkuService";
 const FormItem = Form.Item;
 
 const { confirm } = Modal;
-const { Step } = Steps;
 const { Option } = Select;
 
 class AddProduct extends Component {
@@ -64,8 +63,10 @@ class AddProduct extends Component {
       {
         qApp: APP_NAME,
         qName: value,
+        qTaxonomy: value,
+        mergeNameAndTaxonomySearch: "1",
         paginated: 1,
-        fields: "name"
+        fields: "name taxonomy"
       },
       token => (this.cancelSearchSku = token)
     )
@@ -130,6 +131,7 @@ class AddProduct extends Component {
   closeModal = () => {
     const { toggleShowAdd } = this.props;
     const { isFieldsTouched } = this.props.form;
+    console.log(isFieldsTouched());
     if (isFieldsTouched()) {
       confirm({
         title: "Are you sure you want to close this dialog?",
@@ -197,13 +199,6 @@ class AddProduct extends Component {
         visible={visible}
         onCancel={() => this.closeModal()}
       >
-        <div className="steps-con">
-          <Steps size="small" current={step} style={{ width: "80%" }}>
-            <Step title="Details" />
-            <Step title="Add SKUS's" />
-          </Steps>
-        </div>
-
         <Form onSubmit={this.handleSubmit}>
           {err && (
             <Alert
@@ -213,79 +208,72 @@ class AddProduct extends Component {
               showIcon
             />
           )}
-          <div className={step !== 1 ? "hidden" : ""}>
-            <FormItem {...formItemLayout} label="Product Name">
-              {getFieldDecorator("name", {
-                rules: [
-                  {
-                    required: true,
-                    message: "Please input the product name"
-                  }
-                ]
-              })(<Input />)}
-            </FormItem>
-            <FormItem {...formItemLayout} label="Product Description">
-              {getFieldDecorator("description", {
-                rules: [
-                  {
-                    required: true,
-                    message: "Please input the product description"
-                  }
-                ]
-              })(<Input.TextArea />)}
-            </FormItem>
-            <FormItem {...tailFormItemLayout}>
-              <Button
-                onClick={() => this.handleStep(2)}
-                style={{ marginRight: 10 }}
-                type="primary"
-              >
-                Next
-              </Button>
-              <Button onClick={() => resetFields()}>Reset</Button>
-            </FormItem>
-          </div>
-          <div className={step !== 2 ? "hidden" : ""}>
-            <FormItem {...formItemLayout} label="Sku's">
-              {getFieldDecorator("skus")(
-                <Select
-                  mode="multiple"
-                  labelInValue
-                  placeholder="Type an sku name"
-                  notFoundContent={fetching ? <Spin size="small" /> : null}
-                  filterOption={false}
-                  onSearch={this.fetchSkus}
-                  onChange={this.handleChange}
-                  style={{ width: "100%" }}
-                >
-                  {skus.map(d => (
-                    <Option value={d._id} key={d._id}>
-                      {d.name}
-                    </Option>
-                  ))}
-                </Select>
-              )}
-            </FormItem>
 
-            <FormItem {...tailFormItemLayout}>
-              <Button
-                disabled={loading}
-                onClick={() => this.handleStep(1)}
-                style={{ marginRight: 10 }}
-                type="primary"
+          <FormItem {...formItemLayout} label="Product Name">
+            {getFieldDecorator("name", {
+              rules: [
+                {
+                  required: true,
+                  message: "Please input the product name"
+                }
+              ]
+            })(<Input placeholder="Product name" />)}
+          </FormItem>
+          <FormItem {...formItemLayout} label="Product Description">
+            {getFieldDecorator("description", {
+              rules: [
+                {
+                  required: true,
+                  message: "Please input the product description"
+                }
+              ]
+            })(<Input.TextArea placeholder="Product Description" />)}
+          </FormItem>
+          <FormItem
+            help="To optimize your search, separate each keyword by spaces. Eg. male bottoms dark"
+            {...formItemLayout}
+            label="Sku's"
+          >
+            {getFieldDecorator("skus", {
+              rules: [
+                {
+                  required: true,
+                  message: "Please add some skus"
+                }
+              ]
+            })(
+              <Select
+                mode="multiple"
+                labelInValue
+                placeholder="Type an sku name or a category"
+                notFoundContent={fetching ? <Spin size="small" /> : null}
+                filterOption={false}
+                onSearch={this.fetchSkus}
+                onChange={this.handleChange}
+                style={{ width: "100%" }}
               >
-                Back
-              </Button>
-              <Button
-                disabled={loading}
-                loading={loading}
-                type="primary"
-                htmlType="submit"
-              >
-                Create
-              </Button>
-            </FormItem>
-          </div>
+                {skus.map(d => (
+                  <Option value={d._id} key={d._id}>
+                    <Tooltip title={d.taxonomy.join(",")}>{d.name}</Tooltip>
+                  </Option>
+                ))}
+              </Select>
+            )}
+          </FormItem>
+
+          <FormItem {...tailFormItemLayout}>
+            <Button style={{ marginRight: 10 }} onClick={() => resetFields()}>
+              Reset
+            </Button>
+            <Button
+              disabled={loading}
+              loading={loading}
+              type="primary"
+              htmlType="submit"
+            >
+              Create
+            </Button>
+          </FormItem>
         </Form>
       </Modal>
     );

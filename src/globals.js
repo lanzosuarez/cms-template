@@ -4,7 +4,7 @@ export const AUTH_SERVICE_URL =
 export const API_URL =
   process.env.NODE_ENV !== "production"
     ? "http://localhost:3000/api/v1"
-    : "https://levis-api.azurewebsites.net/api/v1";
+    : "https://levis-api.herokuapp.com/api/v1";
 
 export const SKU_URL =
   process.env.NODE_ENV !== "production"

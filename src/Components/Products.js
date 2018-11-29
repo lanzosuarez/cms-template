@@ -5,10 +5,10 @@ import format from "date-fns/format";
 import { ComponentConnect } from "../context/contextHelper";
 import { SkuConsumer } from "../context/SkuProvider";
 import AddProduct from "./AddProduct";
-import EditSku from "./EditSku";
 import SkuService from "../services/SkuService";
 import SkuHeader from "./SkuHeader";
 import ProductDetails from "./ProductDetails";
+import EditProduct from "./EditProduct";
 
 const { Column } = Table;
 const { Search } = Input;
@@ -81,7 +81,7 @@ class Products extends Component {
   getProducts = () => {
     const { page, qName, qStatus } = this.state;
     return SkuService.getProducts(
-      { qApp: APP_NAME, page, qName, qStatus },
+      { qApp: APP_NAME, page, qName, qStatus, populate: "skus;name,taxonomy" },
       cancelToken => (this.cancelGetProducts = cancelToken)
     );
   };
@@ -262,11 +262,13 @@ class Products extends Component {
           visible={showAdd}
           toggleShowAdd={this.toggleShowAdd}
         />
-        {/* <EditSku
-          fetchResources={this.fetchResources}
-          setSelectedProduct={this.setSelectedProduct}
-          selectedProduct={selectedProduct}
-        /> */}
+        {selectedProduct && (
+          <EditProduct
+            fetchResources={this.fetchResources}
+            setSelectedProduct={this.setSelectedProduct}
+            selectedProduct={selectedProduct}
+          />
+        )}
       </Row>
     );
   }
